@@ -1,0 +1,17 @@
+# Environment files
+.env
+
+# Composer dependencies
+/vendor/
+
+# Node dependencies
+/node_modules/
+
+# Logs
+*.log
+
+# Mac system files
+.DS_Store
+
+# VS Code settings
+.vscode/
