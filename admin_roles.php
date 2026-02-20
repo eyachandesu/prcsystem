@@ -156,8 +156,7 @@ $all_permissions_result = $conn->query("SELECT * FROM permissions");
                 document.getElementById('modal_title').innerHTML = '<i class="fas fa-plus mr-2"></i> Create New Role';
             } else {
                 document.getElementById('modal_title').innerHTML = '<i class="fas fa-edit mr-2"></i> Edit Role Permissions';
-                // Note: Populating checkboxes for edit usually requires an AJAX call 
-                // to see which perms this ID has. For now, this clears them to prevent accidental carryover.
+        
             }
             
             document.getElementById('roleModal').classList.remove('hidden');
