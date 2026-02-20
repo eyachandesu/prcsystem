@@ -32,9 +32,10 @@ require_once 'config.php';
             </div>
         </div>
         <div class="text-sm flex items-center gap-4">
-            <div>
-                Welcome, <span class="font-bold text-blue-700"><?php echo htmlspecialchars($_SESSION['name']); ?></span> 
-                (<?php echo htmlspecialchars($_SESSION['role']); ?>)
+             <div>
+                Welcome, <span class="font-bold text-blue-700"><?php echo htmlspecialchars($_SESSION['name'] ?? 'User'); ?></span> 
+                <span class="text-gray-400 mx-1">|</span>
+                <span class="text-xs uppercase font-medium bg-gray-100 px-2 py-1 rounded"><?php echo htmlspecialchars($_SESSION['role'] ?? 'Staff'); ?></span>
             </div>
             <a href="logout.php" class="ml-4 text-red-600 font-bold"><i class="fas fa-sign-out-alt"></i> Logout</a>
         </div>

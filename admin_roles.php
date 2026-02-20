@@ -37,13 +37,15 @@ $all_permissions_result = $conn->query("SELECT * FROM permissions");
     <div class="flex">
         <aside class="w-64 bg-white min-h-screen shadow-md border-r">
             <nav class="mt-4">
-                <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Management</div>
+                <div class="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Administration </div>
                 <a href="admin_roles.php" class="block py-2.5 px-4 text-sm bg-blue-100 text-blue-800 border-l-4 border-blue-800 font-bold">
                     <i class="fas fa-user-shield mr-2"></i> Roles & Permissions
                 </a>
                 <a href="admin_users.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50">
                     <i class="fas fa-users mr-2"></i> User Management
                 </a>
+                <a href="admin_departments.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50"><i class="fas fa-building mr-2"></i> Departments</a>
+
             </nav>
         </aside>
 
