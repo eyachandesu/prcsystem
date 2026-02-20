@@ -54,10 +54,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// -- Hello my name is eya nichole barcena and i am a student of pangasinan state university bayambang campus, i am currently taking up bachelor of science in information technology and i am in my 4th year.
-// i am currently working on a document tracking system for my supervisor in finance and administative department, the system is designed to help them track the movement of documents within their department and
-// other departments, it will also help them to managa their documents more efficiently and effectively, i am currently in the process of developing the system and i am hoping to complete it by the end of my on the job training,
-// i am also hoping to learn more about web development and database management through this project, thank you for giving me the opportunity to work on this project and i am looking forward to learning more and improving my skills in the field of information technology.
-// 
 
 ?>
