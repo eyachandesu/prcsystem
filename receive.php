@@ -1,21 +1,24 @@
 <?php
-ob_start(); // Start buffering
+// 1. Start output buffering to prevent "headers already sent" errors
+ob_start();
 session_start();
 
+// 2. Security Check: Redirect to login if not authenticated
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
 }
 
-include 'config.php';
+// 3. Database Connection
+require_once 'config.php';
 
-// 1. Get Filter Parameters
+// 4. Get Filter Parameters
 $search_code = isset($_GET['doc_code']) ? trim($_GET['doc_code']) : '';
 $filter_date = isset($_GET['filter_date']) ? $_GET['filter_date'] : ''; 
 $current_user_id = (int)$_SESSION['user_id'];
 
-// 2. Build the Base Query (Notice: No ORDER BY here yet)
-// We use ? for current_holder so it works with bind_param
+// 5. Build the Dynamic Query
+// We fetch documents where the logged-in user is the current_holder
 $query = "SELECT d.*, u.first_name, u.last_name 
           FROM documents d 
           JOIN users u ON d.uploaded_by = u.id 
@@ -24,7 +27,7 @@ $query = "SELECT d.*, u.first_name, u.last_name
 $params = [$current_user_id];
 $types = "i";
 
-// 3. Apply Filters dynamically
+// Apply Search Filter (Number or Title)
 if ($search_code !== '') {
     $query .= " AND (d.document_number LIKE ? OR d.title LIKE ?)";
     $searchTerm = "%$search_code%";
@@ -33,23 +36,24 @@ if ($search_code !== '') {
     $types .= "ss";
 }
 
+// Apply Date Filter
 if ($filter_date !== '') {
     $query .= " AND DATE(d.created_at) = ?";
     $params[] = $filter_date;
     $types .= "s";
 }
 
-// 4. Finalize the query with ONE Order By
+// Add Sorting
 $query .= " ORDER BY d.created_at DESC";
 
-// 5. Execute Prepared Statement
+// 6. Execute Prepared Statement
 $stmt = $conn->prepare($query);
 if ($stmt) {
     $stmt->bind_param($types, ...$params);
     $stmt->execute();
     $result = $stmt->get_result();
 } else {
-    die("Database error: " . $conn->error);
+    die("Critical Database Error: " . $conn->error);
 }
 ?>
 <!DOCTYPE html>
@@ -74,9 +78,9 @@ if ($stmt) {
         </div>
         <div class="text-sm flex items-center gap-4">
             <div>
-                Welcome, <span class="font-bold text-blue-700"><?php echo htmlspecialchars($_SESSION['name']); ?></span> 
+                Welcome, <span class="font-bold text-blue-700"><?php echo htmlspecialchars($_SESSION['name'] ?? 'User'); ?></span> 
                 <span class="text-gray-400 mx-1">|</span>
-                <span class="text-xs uppercase font-medium bg-gray-100 px-2 py-1 rounded"><?php echo htmlspecialchars($_SESSION['role']); ?></span>
+                <span class="text-xs uppercase font-medium bg-gray-100 px-2 py-1 rounded"><?php echo htmlspecialchars($_SESSION['role'] ?? 'Staff'); ?></span>
             </div>
             <a href="logout.php" class="ml-4 text-red-600 font-bold hover:text-red-800 transition">
                 <i class="fas fa-sign-out-alt"></i> Logout
@@ -89,17 +93,17 @@ if ($stmt) {
         <aside class="w-64 bg-white min-h-screen shadow-md border-r">
             <nav class="mt-4">
                 <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Document Tasks</div>
-                <a href="index.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50">
+                <a href="index.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50 transition">
                     <i class="fas fa-search mr-2"></i> Document Tracking
                 </a>
                 <a href="receive.php" class="block py-2.5 px-4 text-sm bg-blue-100 text-blue-700 font-bold border-l-4 border-blue-700">
                     <i class="fas fa-file-import mr-2"></i> Receive
                 </a>
-                <a href="transfer.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50">
+                <a href="transfer.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50 transition">
                     <i class="fas fa-exchange-alt mr-2"></i> Transfer
                 </a>
 
-                <?php if ($_SESSION['role'] === 'System Administrator'): ?>
+                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'System Administrator'): ?>
                 <div class="px-4 py-2 mt-6 text-xs font-bold text-gray-400 uppercase border-t pt-4">Administration</div>
                 <a href="admin_roles.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50"><i class="fas fa-user-shield mr-2"></i> Roles</a>
                 <a href="admin_users.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50"><i class="fas fa-users mr-2"></i> Users</a>
@@ -114,7 +118,7 @@ if ($stmt) {
                 <div class="mb-6 flex justify-between items-end">
                     <div>
                         <h2 class="text-xl font-bold text-gray-700">Incoming Documents</h2>
-                        <p class="text-sm text-gray-500">Review and acknowledge documents sent to your department.</p>
+                        <p class="text-sm text-gray-500">Review and acknowledge documents currently assigned to you.</p>
                     </div>
                     <div class="text-right">
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Server Time</p>
@@ -172,7 +176,7 @@ if ($stmt) {
                             <table class="w-full text-left border-collapse">
                                 <thead>
                                     <tr class="text-[11px] font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                                        <th class="pb-4 pl-2">Timestamp</th>
+                                        <th class="pb-4 pl-2">Uploaded</th>
                                         <th class="pb-4">Document ID</th>
                                         <th class="pb-4">Subject & Description</th>
                                         <th class="pb-4">Sender</th>
@@ -189,12 +193,12 @@ if ($stmt) {
                                             </td>
                                             <td class="py-4">
                                                 <span class="font-mono text-blue-700 font-bold bg-blue-50 px-2 py-1 border border-blue-100 rounded text-xs">
-                                                    <?php echo $row['document_number']; ?>
+                                                    <?php echo htmlspecialchars($row['document_number']); ?>
                                                 </span>
                                             </td>
                                             <td class="py-4">
                                                 <div class="font-bold text-gray-800 text-sm uppercase"><?php echo htmlspecialchars($row['title']); ?></div>
-                                                <div class="text-xs text-gray-500 truncate max-w-xs"><?php echo htmlspecialchars($row['description'] ?? 'No description provided'); ?></div>
+                                                <div class="text-xs text-gray-500 truncate max-w-xs italic"><?php echo htmlspecialchars($row['description'] ?? 'No description'); ?></div>
                                             </td>
                                             <td class="py-4">
                                                 <div class="flex items-center gap-2">
@@ -207,6 +211,7 @@ if ($stmt) {
                                                 </div>
                                             </td>
                                             <td class="py-4 text-center">
+                                                <!-- IMPORTANT: Verify your file is named exactly download_and_receive.php -->
                                                 <a href="download_and_receive.php?id=<?php echo $row['id']; ?>" 
                                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold text-[11px] inline-flex items-center gap-2 shadow-sm transition-all active:scale-95">
                                                     <i class="fas fa-cloud-download-alt"></i> RECEIVE & DOWNLOAD
@@ -222,7 +227,7 @@ if ($stmt) {
                                                         <i class="fas fa-folder-open text-gray-300 text-3xl"></i>
                                                     </div>
                                                     <p class="text-gray-400 font-medium">No incoming documents found.</p>
-                                                    <p class="text-xs text-gray-300 mt-1">Try adjusting your filters or search keywords.</p>
+                                                    <p class="text-xs text-gray-300 mt-1">Check back later or adjust your search.</p>
                                                 </div>
                                             </td>
                                         </tr>
@@ -230,7 +235,7 @@ if ($stmt) {
                                 </tbody>
                             </table>
                         </div>
-                    </div> <!-- End Padding Container -->
+                    </div>
                 </div>
             </div>
         </main>
@@ -239,5 +244,6 @@ if ($stmt) {
 </body>
 </html>
 <?php 
+// Close buffering
 ob_end_flush(); 
 ?>
