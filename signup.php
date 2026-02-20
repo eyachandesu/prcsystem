@@ -8,19 +8,20 @@ require_once "config.php";
 $error = "";
 $success = "";
 
-$roles_query = "SELECT id, role_name FROM roles ORDER BY id ASC";
-$roles_result = $conn->query($roles_query);
+// Removed the roles query from here
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $fname = trim($_POST['first_name']);
     $lname = trim($_POST['last_name']);
     $email = trim($_POST['email']);
     $dept  = $_POST['department'];
-    $role_id = $_POST['role_id'];
     $pass  = $_POST['password'];
     $conf_pass = $_POST['confirm_password'];
+    
+    // SET DEFAULT ROLE ID HERE (e.g., 2 for Staff/User)
+    $role_id = 2; 
 
-    if (empty($fname) || empty($lname) || empty($email) || empty($pass) || empty($role_id)) {
+    if (empty($fname) || empty($lname) || empty($email) || empty($pass) || empty($dept)) {
         $error = "All fields are required.";
     } elseif ($pass !== $conf_pass) {
         $error = "Passwords do not match.";
@@ -67,18 +68,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     <div class="bg-white p-10 rounded-2xl shadow-xl w-full max-w-lg border border-gray-100">
         
-        <!-- LARGE LOGO SECTION -->
         <div class="text-center mb-8">
              <img src="prclogo.png" alt="PRC Logo" 
                   class="mx-auto h-40 w-40 mb-4 drop-shadow-md" 
                   style="mix-blend-mode: multiply;">
              
-             <h2 class="text-2xl font-extrabold text-blue-900 uppercase tracking-tight">PRC Registration</h2>
+             <h2 class="text-2xl font-extrabold text-blue-900 uppercase tracking-tight">PRCO1 Registration</h2>
              <p class="text-gray-500 text-sm font-medium">Create your Document Tracking account</p>
              <div class="h-1 w-16 bg-blue-800 mx-auto mt-3 rounded-full"></div>
         </div>
 
-        <!-- NOTIFICATIONS -->
         <?php if($error): ?>
             <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-3 mb-6 text-sm flex items-center">
                 <i class="fas fa-exclamation-circle mr-2"></i> <?php echo $error; ?>
@@ -91,7 +90,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             </div>
         <?php endif; ?>
 
-        <!-- SIGNUP FORM -->
         <form action="signup.php" method="POST" class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
                 <div>
@@ -112,30 +110,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     class="w-full border border-gray-200 p-2.5 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none transition-all text-sm" placeholder="juan.delacruz@prc.gov.ph">
             </div>
             
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Department</label>
-                    <select name="department" required class="w-full border border-gray-200 p-2.5 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-blue-600">
-                        <option value="" disabled selected>Select Dept</option>
-                        <option>Licensure Office</option>
-                        <option>Legal Service</option>
-                        <option>ICT Service</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">System Role</label>
-                    <select name="role_id" required class="w-full border border-gray-200 p-2.5 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-blue-600">
-                        <option value="" disabled selected>Select Role</option>
-                        <?php 
-                        if ($roles_result->num_rows > 0) {
-                            while($role = $roles_result->fetch_assoc()) {
-                                echo "<option value='".$role['id']."'>".$role['role_name']."</option>";
-                            }
-                        }
-                        ?>
-                    </select>
-                </div>
+            <div>
+                <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1 ml-1">Department</label>
+                <select name="department" required class="w-full border border-gray-200 p-2.5 rounded-lg bg-white text-sm outline-none focus:ring-2 focus:ring-blue-600">
+                    <option value="" disabled selected>Select Dept</option>
+                    <option>Licensure Office</option>
+                    <option>Legal Service</option>
+                    <option>ICT Service</option>
+                </select>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
