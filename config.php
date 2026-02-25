@@ -2,7 +2,7 @@
 $host = "localhost";
 $user = "root";
 $pass = ""; // Default XAMPP/WAMP is empty
-$dbname = "prcsystem";
+$dbname = "dts";
 
 // Create connection
 $conn = new mysqli($host, $user, $pass, $dbname);
