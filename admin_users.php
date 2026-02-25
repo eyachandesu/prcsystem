@@ -1,4 +1,5 @@
 <?php 
+ob_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 session_start(); 
@@ -8,9 +9,9 @@ if ($_SESSION['role'] !== 'System Administrator') { header("Location: index.php?
 
 include 'config.php'; 
 
-// --- HANDLE STATUS TOGGLE ---
+// --- 1. HANDLE STATUS TOGGLE ---
 if (isset($_GET['toggle_status']) && isset($_GET['id'])) {
-    $id = $_GET['id'];
+    $id = (int)$_GET['id'];
     $new_status = ($_GET['toggle_status'] == 'active') ? 'inactive' : 'active';
     
     $stmt = $conn->prepare("UPDATE users SET status = ? WHERE id = ?");
@@ -20,9 +21,9 @@ if (isset($_GET['toggle_status']) && isset($_GET['id'])) {
     exit();
 }
 
-// --- HANDLE DELETION ---
+// --- 2. HANDLE DELETION ---
 if (isset($_GET['delete_id'])) {
-    $id_to_delete = $_GET['delete_id'];
+    $id_to_delete = (int)$_GET['delete_id'];
     if ($id_to_delete == $_SESSION['user_id']) {
         header("Location: admin_users.php?error=You cannot delete your own account.");
         exit();
@@ -34,12 +35,25 @@ if (isset($_GET['delete_id'])) {
     exit();
 }
 
+// --- 3. FETCH USERS ---
 $users_result = $conn->query("SELECT u.*, r.role_name FROM users u LEFT JOIN roles r ON u.role_id = r.id ORDER BY u.last_name ASC");
-$roles_array = []; // Store roles for JS and dropdowns
-$roles_result = $conn->query("SELECT id, role_name FROM roles");
-while($r = $roles_result->fetch_assoc()) { $roles_array[] = $r; }
-?>
 
+// --- 4. FETCH ROLES FOR DROPDOWN ---
+$roles_array = [];
+$roles_query = $conn->query("SELECT id, role_name FROM roles ORDER BY role_name ASC");
+while($r = $roles_query->fetch_assoc()) { $roles_array[] = $r; }
+
+// --- 5. FETCH DEPARTMENTS FOR DROPDOWN ---
+$depts_array = [];
+// Check if departments table exists, otherwise pull distinct depts from users table
+$dept_check = $conn->query("SHOW TABLES LIKE 'departments'");
+if($dept_check->num_rows > 0) {
+    $depts_query = $conn->query("SELECT dept_name FROM departments ORDER BY dept_name ASC");
+} else {
+    $depts_query = $conn->query("SELECT DISTINCT department as dept_name FROM users WHERE department IS NOT NULL ORDER BY department ASC");
+}
+while($d = $depts_query->fetch_assoc()) { $depts_array[] = $d['dept_name']; }
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -54,41 +68,53 @@ while($r = $roles_result->fetch_assoc()) { $roles_array[] = $r; }
         <div class="flex items-center">
             <img src="prclogo.png" alt="PRC Logo" class="h-10 w-10 mr-4">
             <div>
-                <h1 class="text-blue-900 font-bold text-lg">Document Tracking System</h1>
-                <p class="text-[10px] font-semibold text-gray-500 uppercase">Administration Panel</p>
+                <h1 class="text-blue-900 font-bold text-lg leading-tight">Document Tracking System</h1>
+                <p class="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">Administration Panel</p>
             </div>
         </div>
-        <div class="text-sm">Admin: <span class="font-bold"><?php echo $_SESSION['name']; ?></span> | <a href="index.php" class="text-blue-600 font-bold hover:underline">Exit Admin</a></div>
+        <div class="text-sm">Admin: <span class="font-bold text-blue-700"><?php echo htmlspecialchars($_SESSION['name']); ?></span> | <a href="index.php" class="text-red-600 font-bold hover:underline">Exit Admin</a></div>
     </header>
 
     <div class="flex">
         <aside class="w-64 bg-white min-h-screen shadow-md border-r">
             <nav class="mt-4">
-                <div class="px-4 py-2 mt-6 text-xs font-semibold text-gray-400 uppercase border-t pt-4">Administration</div>
-                <a href="admin_roles.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50"><i class="fas fa-user-shield mr-2"></i> Roles & Permissions</a>
+                <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase tracking-widest">Administration</div>
+                <a href="admin_roles.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50 transition"><i class="fas fa-user-shield mr-2"></i> Roles & Permissions</a>
                 <a href="admin_users.php" class="block py-2.5 px-4 text-sm bg-blue-100 text-blue-800 border-l-4 border-blue-800 font-bold"><i class="fas fa-users mr-2"></i> User Management</a>
-                <a href="admin_departments.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50"><i class="fas fa-building mr-2"></i> Departments</a>
+                <a href="admin_departments.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50 transition"><i class="fas fa-building mr-2"></i> Departments</a>
             </nav>
         </aside>
 
         <main class="flex-1 p-8">
+            <!-- Notifications -->
             <?php if(isset($_GET['msg'])): ?>
-                <div class="bg-green-100 text-green-700 p-3 mb-4 rounded border border-green-200 text-sm"><i class="fas fa-check-circle mr-2"></i> <?php echo htmlspecialchars($_GET['msg']); ?></div>
+                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 mb-6 text-sm flex items-center shadow-sm">
+                    <i class="fas fa-check-circle mr-2"></i> <?php echo htmlspecialchars($_GET['msg']); ?>
+                </div>
+            <?php endif; ?>
+            
+            <?php if(isset($_GET['error'])): ?>
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-6 text-sm flex items-center shadow-sm">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> <?php echo htmlspecialchars($_GET['error']); ?>
+                </div>
             <?php endif; ?>
 
             <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-bold text-blue-900">User Management</h2>
-                <button onclick="openModal('add')" class="bg-blue-800 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition">
-                    <i class="fas fa-user-plus mr-2"></i> Create New User
+                <div>
+                    <h2 class="text-2xl font-bold text-blue-900">User Accounts</h2>
+                    <p class="text-sm text-gray-500">Manage system access and department assignments.</p>
+                </div>
+                <button onclick="openModal('add')" class="bg-blue-900 text-white px-5 py-2 rounded-lg shadow-lg hover:bg-blue-800 transition-all flex items-center gap-2 font-bold text-sm">
+                    <i class="fas fa-user-plus"></i> CREATE NEW USER
                 </button>
             </div>
 
-            <div class="bg-white rounded border shadow-sm overflow-hidden">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <table class="w-full text-left text-sm">
-                    <thead class="bg-gray-50 border-b text-gray-600 font-bold">
+                    <thead class="bg-gray-50 border-b text-gray-400 font-bold uppercase text-[10px] tracking-wider">
                         <tr>
                             <th class="p-4">Full Name</th>
-                            <th class="p-4">Email</th>
+                            <th class="p-4">Email Address</th>
                             <th class="p-4">Department</th>
                             <th class="p-4">Role</th>
                             <th class="p-4">Status</th>
@@ -98,32 +124,35 @@ while($r = $roles_result->fetch_assoc()) { $roles_array[] = $r; }
                     <tbody class="divide-y text-gray-700">
                         <?php while($u = $users_result->fetch_assoc()): ?>
                         <tr class="hover:bg-blue-50/30 transition">
-                            <td class="p-4 font-bold text-blue-900"><?php echo $u['last_name'] . ', ' . $u['first_name']; ?></td>
-                            <td class="p-4"><?php echo $u['email']; ?></td>
-                            <td class="p-4 text-xs"><?php echo $u['department']; ?></td>
+                            <td class="p-4 font-bold text-blue-900"><?php echo htmlspecialchars($u['last_name'] . ', ' . $u['first_name']); ?></td>
+                            <td class="p-4 text-gray-500"><?php echo htmlspecialchars($u['email']); ?></td>
+                            <td class="p-4 text-xs font-semibold"><?php echo htmlspecialchars($u['department']); ?></td>
                             <td class="p-4">
-                                <span class="px-2 py-1 rounded bg-gray-100 text-gray-600 text-[10px] font-bold uppercase"><?php echo $u['role_name'] ?? 'No Role'; ?></span>
+                                <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[9px] font-bold uppercase border border-blue-100">
+                                    <?php echo htmlspecialchars($u['role_name'] ?? 'No Role'); ?>
+                                </span>
                             </td>
                             <td class="p-4">
                                 <?php if($u['status'] == 'active'): ?>
-                                    <span class="text-green-600 font-bold text-[10px] uppercase"><i class="fas fa-circle text-[8px] mr-1"></i> Active</span>
+                                    <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">Active</span>
                                 <?php else: ?>
-                                    <span class="text-red-500 font-bold text-[10px] uppercase"><i class="fas fa-circle text-[8px] mr-1"></i> Inactive</span>
+                                    <span class="bg-gray-100 text-gray-400 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase">Inactive</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="p-4 text-right flex justify-end gap-3">
-                                <!-- Status Toggle -->
-                                <a href="?toggle_status=<?php echo $u['status']; ?>&id=<?php echo $u['id']; ?>" title="Toggle Status" class="<?php echo ($u['status']=='active') ? 'text-orange-400' : 'text-green-500'; ?>">
-                                    <i class="fas fa-power-off"></i>
-                                </a>
-                                <!-- Edit Button -->
-                                <button onclick='openModal("edit", <?php echo json_encode($u); ?>)' class="text-blue-500 hover:text-blue-700">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <!-- Delete Button -->
-                                <?php if($u['id'] != $_SESSION['user_id']): ?>
-                                    <a href="?delete_id=<?php echo $u['id']; ?>" onclick="return confirm('Permanently delete this user?')" class="text-red-400 hover:text-red-600"><i class="fas fa-trash-alt"></i></a>
-                                <?php endif; ?>
+                            <td class="p-4 text-right">
+                                <div class="flex justify-end gap-3 items-center">
+                                    <a href="?toggle_status=<?php echo $u['status']; ?>&id=<?php echo $u['id']; ?>" 
+                                       title="Toggle Status" 
+                                       class="<?php echo ($u['status']=='active') ? 'text-orange-400 hover:text-orange-600' : 'text-green-500 hover:text-green-700'; ?> transition">
+                                        <i class="fas fa-power-off"></i>
+                                    </a>
+                                    <button onclick='openModal("edit", <?php echo json_encode($u); ?>)' class="text-blue-500 hover:text-blue-700 transition">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <?php if($u['id'] != $_SESSION['user_id']): ?>
+                                        <a href="?delete_id=<?php echo $u['id']; ?>" onclick="return confirm('Are you sure you want to permanently delete this user?')" class="text-red-300 hover:text-red-600 transition"><i class="fas fa-trash-alt"></i></a>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                         <?php endwhile; ?>
@@ -133,56 +162,58 @@ while($r = $roles_result->fetch_assoc()) { $roles_array[] = $r; }
         </main>
     </div>
 
-    <!-- Modal Form (Handles both Add and Edit) -->
-    <div id="userModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+    <!-- Modal Form -->
+    <div id="userModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center z-50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-fade-in">
             <form action="process_user.php" method="POST">
                 <input type="hidden" name="user_id" id="modal_user_id">
-                <div class="bg-blue-900 p-4 text-white flex justify-between">
-                    <h3 class="font-bold" id="modal_title">Add New User</h3>
-                    <button type="button" onclick="closeModal()">&times;</button>
+                <div class="bg-blue-900 p-5 text-white flex justify-between items-center">
+                    <h3 class="font-bold uppercase text-xs tracking-widest" id="modal_title">Add New User</h3>
+                    <button type="button" onclick="closeModal()" class="text-2xl leading-none">&times;</button>
                 </div>
-                <div class="p-6 space-y-4">
+                <div class="p-8 space-y-5">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase">First Name</label>
-                            <input type="text" name="first_name" id="modal_first_name" required class="border p-2 w-full rounded text-sm outline-none focus:border-blue-500">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">First Name</label>
+                            <input type="text" name="first_name" id="modal_first_name" required class="border border-gray-200 p-2.5 w-full rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition">
                         </div>
                         <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase">Last Name</label>
-                            <input type="text" name="last_name" id="modal_last_name" required class="border p-2 w-full rounded text-sm outline-none focus:border-blue-500">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Last Name</label>
+                            <input type="text" name="last_name" id="modal_last_name" required class="border border-gray-200 p-2.5 w-full rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition">
                         </div>
                     </div>
                     <div>
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">Email Address</label>
-                        <input type="email" name="email" id="modal_email" required class="border p-2 w-full rounded text-sm outline-none focus:border-blue-500">
+                        <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Email Address</label>
+                        <input type="email" name="email" id="modal_email" required class="border border-gray-200 p-2.5 w-full rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition" placeholder="juan.delacruz@prc.gov.ph">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase">Department</label>
-                            <select name="department" id="modal_department" required class="border p-2 w-full rounded text-sm bg-white outline-none focus:border-blue-500">
-                                <option value="Licensure Office">Licensure Office</option>
-                                <option value="Legal Service">Legal Service</option>
-                                <option value="ICT Service">ICT Service</option>
+                            <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Department</label>
+                            <select name="department" id="modal_department" required class="border border-gray-200 p-2.5 w-full rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                <option value="" disabled selected>-- Select --</option>
+                                <?php foreach($depts_array as $dept): ?>
+                                    <option value="<?php echo htmlspecialchars($dept); ?>"><?php echo htmlspecialchars($dept); ?></option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                         <div>
-                            <label class="text-[10px] font-bold text-gray-400 uppercase">System Role</label>
-                            <select name="role_id" id="modal_role_id" required class="border p-2 w-full rounded text-sm bg-white outline-none focus:border-blue-500">
+                            <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">System Role</label>
+                            <select name="role_id" id="modal_role_id" required class="border border-gray-200 p-2.5 w-full rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                <option value="" disabled selected>-- Select --</option>
                                 <?php foreach($roles_array as $role): ?>
-                                    <option value="<?php echo $role['id']; ?>"><?php echo $role['role_name']; ?></option>
+                                    <option value="<?php echo $role['id']; ?>"><?php echo htmlspecialchars($role['role_name']); ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
                     <div id="password_section">
-                        <label class="text-[10px] font-bold text-gray-400 uppercase">Password</label>
-                        <input type="password" name="password" id="modal_password" placeholder="Leave blank to keep current" class="border p-2 w-full rounded text-sm outline-none focus:border-blue-500">
-                        <p class="text-[9px] text-gray-400 mt-1 italic">* Password is only required when creating new accounts.</p>
+                        <label class="text-[10px] font-bold text-gray-400 uppercase block mb-1">Password</label>
+                        <input type="password" name="password" id="modal_password" class="border border-gray-200 p-2.5 w-full rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition">
+                        <p class="text-[9px] text-gray-400 mt-2 italic">* Leave blank to keep current password when editing.</p>
                     </div>
                 </div>
-                <div class="p-4 bg-gray-50 text-right">
-                    <button type="submit" class="bg-blue-800 text-white px-6 py-2 rounded font-bold text-sm shadow-md" id="modal_submit_btn">Save Account</button>
+                <div class="p-6 bg-gray-50 border-t flex justify-end">
+                    <button type="submit" class="bg-blue-900 text-white px-8 py-2.5 rounded-lg font-bold text-xs uppercase shadow-lg hover:bg-blue-800 transition-all active:scale-95" id="modal_submit_btn">Save Account</button>
                 </div>
             </form>
         </div>
@@ -220,3 +251,4 @@ while($r = $roles_result->fetch_assoc()) { $roles_array[] = $r; }
     </script>
 </body>
 </html>
+<?php ob_end_flush(); ?>

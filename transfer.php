@@ -73,6 +73,9 @@ $users = $conn->query($users_query);
                 <a href="admin_users.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50">
                     <i class="fas fa-users mr-2"></i> Users
                 </a>
+                <a href="admin_departments.php" class="block py-2.5 px-4 text-sm text-gray-600 hover:bg-blue-50">
+                    <i class="fas fa-building mr-2"></i> Departments
+                </a>
                 <?php endif; ?>
             </nav>
         </aside>
