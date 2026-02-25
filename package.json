@@ -1,0 +1,23 @@
+{
+  "name": "prcsystem",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eyachandesu/prcsystem.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eyachandesu/prcsystem/issues"
+  },
+  "homepage": "https://github.com/eyachandesu/prcsystem#readme",
+  "description": "",
+  "devDependencies": {
+    "tailwindcss": "^4.2.1"
+  }
+}
