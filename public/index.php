@@ -6,8 +6,16 @@
   <link href="./dist/output.css" rel="stylesheet">
 </head>
 <body>
-  <h1 class="text-3xl font-bold underline text-blue-600">
-    Hello Tailwind v4!
-  </h1>
+ <div class="bg-blue-500 text-white p-4">Welcome to the PRCS System</div>
+ <div class="bg-blue-500 text-white p-4">
+  <p class = "text-2xl font-bold">
+    Login
+  </p>
+  <form action="/controllers/login_handler.php" method="POST">
+    <input type="text" id="username" name="username" placeholder="Username">
+    <input type="password" id="password" name="password" placeholder="Password">
+    <button type="submit">Login</button>
+  </form>
+ </div>
 </body>
 </html>
