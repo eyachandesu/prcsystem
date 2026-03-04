@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['full_name'] = $user['user_first_name'] . " " . $user['user_last_name'];
 
                 // 8. Redirect to Dashboard
-                header("Location: ../public/dashboard.php");
+                header("Location: ../public/admin_dashboard.php");
                 exit();
 
             } else {
