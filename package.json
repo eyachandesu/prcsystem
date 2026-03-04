@@ -1,23 +1,15 @@
 {
   "name": "prcsystem",
   "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "npx @tailwindcss/cli -i ./src/input.css -o ./public/dist/output.css --watch --content './public/**/*.php'"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/eyachandesu/prcsystem.git"
+  "dependencies": {
+    "@tailwindcss/cli": "^4.0.0",
+    "tailwindcss": "^4.0.0"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/eyachandesu/prcsystem/issues"
-  },
-  "homepage": "https://github.com/eyachandesu/prcsystem#readme",
-  "description": "",
   "devDependencies": {
-    "tailwindcss": "^4.2.1"
+    "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.7.2"
   }
 }

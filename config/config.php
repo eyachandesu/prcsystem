@@ -1,12 +1,15 @@
 <?php
+$host = "localhost";
+$user = "root";
+$pass = ""; 
+$dbname = "prcsystem_db"; // Updated to your new DB name
 
-require_once __DIR__ . '/../vendor/autoload.php';
-
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../');
-$dotenv->load();
-
-$conn = new mysqli($_ENV['DB_HOST'], $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'], $_ENV['DB_DATABASE']);
+$conn = new mysqli($host, $user, $pass, $dbname);
 
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
+
+// Helper to generate UUIDs in PHP if needed, 
+// though we will use MySQL's UUID() function in queries.
+?>
