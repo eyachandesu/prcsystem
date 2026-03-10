@@ -14,7 +14,7 @@
   <body class="bg-slate-100 min-h-screen flex flex-col items-center justify-center font-sans p-4">
 
     <div class="mb-6 text-center">
-      <img src="/img/prclogo.png" alt="PRC Logo" class="h-20 w-20 mx-auto mb-3 drop-shadow-sm">
+      <img src="img/prclogo.png" alt="PRC Logo" class="h-20 w-20 mx-auto mb-3 drop-shadow-sm">
       <h1 class="text-blue-900 font-bold text-xl uppercase tracking-tight">Document Tracking System</h1>
       <p class="text-slate-500 text-xs font-semibold uppercase tracking-widest">Region 1 - Official Portal</p>
     </div>

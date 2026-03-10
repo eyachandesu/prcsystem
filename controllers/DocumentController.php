@@ -57,3 +57,46 @@ if (isset($_POST['upload_document'])) {
         header("Location: ../public/transfer.php?error=File upload failed.");
     }
 }
+if (isset($_POST['receive_document'])) {
+    $doc_id = $_POST['doc_id'];
+    $remarks = $_POST['remarks'];
+    $action_taken = $_POST['action_taken']; // If you added this to table, update it
+    $processed_by = $_SESSION['user_id'];
+
+    // 1. Get current dept info
+    $stmt = $conn->prepare("SELECT current_dept_id FROM document WHERE doc_id = ?");
+    $stmt->bind_param("s", $doc_id);
+    $stmt->execute();
+    $current_dept_id = $stmt->get_result()->fetch_assoc()['current_dept_id'];
+
+    $conn->begin_transaction();
+
+    try {
+        // Status 3 = "Received"
+        $new_status = 3;
+
+        // 2. Update Document status
+        $update = $conn->prepare("UPDATE document SET doc_status_id = ?, doc_updated_at = NOW() WHERE doc_id = ?");
+        $update->bind_param("is", $new_status, $doc_id);
+        $update->execute();
+
+        // 3. Log the reception
+        $log_remarks = "ACTION: " . $action_taken . " | REMARKS: " . $remarks;
+        $log = $conn->prepare("
+            INSERT INTO transaction_logs (doc_id, doc_status_id, current_dept_id, target_dept_id, processed_by, remarks, log_timestamp) 
+            VALUES (?, ?, ?, ?, ?, ?, NOW())
+        ");
+        // Target dept stays the same because it's already at the destination
+        $log->bind_param("siiiss", $doc_id, $new_status, $current_dept_id, $current_dept_id, $processed_by, $log_remarks);
+        $log->execute();
+
+        $conn->commit();
+        $_SESSION['success'] = "Document marked as Received.";
+    } catch (Exception $e) {
+        $conn->rollback();
+        $_SESSION['error'] = "Error: " . $e->getMessage();
+    }
+
+    header("Location: ../public/receive.php");
+    exit();
+}

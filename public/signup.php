@@ -1,6 +1,14 @@
 <?php
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
+
+// Tell PHP to store sessions in a local folder instead of the system temp folder
+$sessionPath = __DIR__ . '/../sessions';
+if (!file_exists($sessionPath)) {
+    mkdir($sessionPath, 0777, true);
+}
+session_save_path($sessionPath);
+
 session_start();
 
 require_once '../config/config.php';
@@ -30,7 +38,7 @@ $roles = $conn->query("SELECT user_role_id, role_name FROM user_role");
     <div class="p-8">
       <div class="text-center mb-8">
         <!-- FIX 2: Ensure prclogo.png is inside the public folder -->
-        <img src="prclogo.png" alt="PRC Logo" class="h-16 w-16 mx-auto mb-2">
+        <img src="img/prclogo.png" alt="PRC Logo" class="h-16 w-16 mx-auto mb-2">
         <h1 class="text-2xl font-black text-slate-800 uppercase tracking-tight">System Registration</h1>
         <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Create your personnel account</p>
       </div>

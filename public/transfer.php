@@ -3,30 +3,50 @@ session_start();
 require_once "../config/config.php";
 if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit(); }
 
-$doc_types = $conn->query("SELECT * FROM document_type ORDER BY document_type_name ASC");
-$departments = $conn->query("SELECT * FROM department ORDER BY dept_name ASC");
+// 1. Fetch Recipients (Excluding current user)
+$users_query = $conn->prepare("SELECT email, user_first_name, user_last_name FROM user_profile WHERE user_id != ? ORDER BY email ASC");
+$users_query->bind_param("s", $_SESSION['user_id']);
+$users_query->execute();
+$users_list = $users_query->get_result();
+
+// 2. Fetch My Documents
+$my_docs = $conn->prepare("
+    SELECT d.doc_id, d.applicant_name, d.ref_no, dt.document_type_name 
+    FROM document d 
+    JOIN document_type dt ON d.doc_type_id = dt.doc_type_id 
+    WHERE d.current_user_id = ?
+");
+$my_docs->bind_param("s", $_SESSION['user_id']);
+$my_docs->execute();
+$docs_res = $my_docs->get_result();
+
+// Get current date/time for the UI
+date_default_timezone_set('Asia/Manila');
+$current_date = date('m/d/Y');
+$current_time = date('h:i A');
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Upload Document | PRC DTS</title>
+    <title>Transfer Document | PRC DTS</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .sidebar-transition { transition: width 0.3s ease-in-out; }
+        input:read-only { cursor: not-allowed; background-color: #f8fafc; }
     </style>
 </head>
-<body class="bg-gray-50 flex min-h-screen">
+<body class="bg-gray-50 flex min-h-screen font-sans">
 
-    <!-- SIDEBAR (Light, Collapsible) -->
+    <!-- SIDEBAR -->
     <aside id="sidebar" class="w-72 bg-slate-50 border-r border-slate-200 min-h-screen flex flex-col sidebar-transition relative">
         <button onclick="toggleSidebar()" class="absolute -right-3 top-10 bg-white border border-slate-200 rounded-full h-7 w-7 flex items-center justify-center text-slate-500 hover:text-blue-900 shadow-sm z-50">
             <i id="toggle-icon" class="fas fa-chevron-left text-xs"></i>
         </button>
 
         <div class="p-6 flex flex-col items-center border-b border-slate-100">
-            <img src="prclogo.png" id="sidebar-logo" class="h-16 w-16" style="mix-blend-mode: multiply;">
+            <img src="img/prclogo.png" id="sidebar-logo" class="h-16 w-16" style="mix-blend-mode: multiply;">
             <div id="sidebar-brand" class="mt-4 text-center">
                 <p class="text-blue-900 font-black text-sm uppercase tracking-tighter">PRC Administration</p>
             </div>
@@ -34,76 +54,118 @@ $departments = $conn->query("SELECT * FROM department ORDER BY dept_name ASC");
 
         <nav class="flex-1 p-4 space-y-2">
             <a href="admin_dashboard.php" class="flex items-center p-3 text-slate-600 hover:bg-slate-100 rounded-lg group">
+                <i class="fas fa-chart-line w-6 text-center mr-3 text-lg group-hover:text-blue-900"></i>
+                <span class="nav-label opacity-100 whitespace-nowrap">Dashboard</span>
+            </a>
+            
+            <a href="tracking.php" class="flex items-center p-3 text-slate-600 hover:bg-slate-100 rounded-lg group">
                 <i class="fas fa-search w-6 text-center mr-3 text-lg group-hover:text-blue-900"></i>
                 <span class="nav-label opacity-100 whitespace-nowrap">Document Tracking</span>
             </a>
-            
-            <a href="transfer.php" class="flex items-center p-3 bg-blue-100 text-blue-900 rounded-lg font-bold shadow-sm">
-                <i class="fas fa-file-upload w-6 text-center mr-3 text-lg"></i>
-                <span class="nav-label opacity-100 whitespace-nowrap">Upload Document</span>
-            </a>
-
             <a href="receive.php" class="flex items-center p-3 text-slate-600 hover:bg-slate-100 rounded-lg group">
-                <i class="fas fa-file-import w-6 text-center mr-3 text-lg group-hover:text-blue-900"></i>
-                <span class="nav-label opacity-100 whitespace-nowrap">Receive Document</span>
+                <i class="fas fa-file-import w-6 text-center mr-3 text-lg"></i>
+                <span class="nav-label">Receive Document</span>
+            </a>
+            <a href="transfer.php" class="flex items-center p-3 bg-blue-100 text-blue-900 rounded-lg font-bold shadow-sm">
+                <i class="fas fa-exchange-alt w-6 text-center mr-3 text-lg"></i>
+                <span class="nav-label opacity-100 whitespace-nowrap">Transfer Document</span>
             </a>
         </nav>
     </aside>
 
     <!-- MAIN CONTENT -->
     <main class="flex-1 p-10 overflow-y-auto">
-        <div class="max-w-4xl mx-auto">
-            <div class="mb-10">
-                <h2 class="text-3xl font-black text-slate-800 tracking-tight">System Upload</h2>
-                <p class="text-slate-400 text-sm font-medium">Initialize document tracking for new arrivals.</p>
+        <div class="max-w-5xl mx-auto">
+            
+            <!-- HEADER & VALIDATION STATUS -->
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-tight">Transfer Document</h2>
+                    <p class="text-slate-400 text-sm font-medium">Forwarding documents across departments.</p>
+                </div>
+                <div class="flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full border border-green-100">
+                    <div class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span class="text-[10px] font-black text-green-700 uppercase tracking-widest">Form is Ready</span>
+                </div>
             </div>
 
-            <form action="../controllers/DocumentController.php" method="POST" enctype="multipart/form-data" class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+            <form action="../controllers/DocumentController.php" method="POST" class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+                
+                <!-- TOOLBAR -->
                 <div class="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center px-8">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Entry Form</span>
-                    <button type="submit" name="upload_document" class="bg-blue-900 text-white px-8 py-2 rounded-full font-bold text-xs uppercase shadow-lg hover:bg-blue-800 transition-all">
-                        Execute Upload
+                    <div class="flex gap-4">
+                        <button type="button" class="text-[10px] font-black text-slate-400 hover:text-blue-900 uppercase tracking-widest transition-colors">
+                            <i class="fas fa-save mr-1"></i> Save Draft
+                        </button>
+                        <button type="reset" class="text-[10px] font-black text-slate-400 hover:text-red-600 uppercase tracking-widest transition-colors">
+                            <i class="fas fa-sync-alt mr-1"></i> Reset Form
+                        </button>
+                    </div>
+                    <button type="submit" name="transfer_document" class="bg-blue-900 text-white px-8 py-2.5 rounded-full font-bold text-xs uppercase shadow-lg hover:bg-blue-800 transition-all flex items-center gap-2">
+                        <i class="fas fa-paper-plane text-[10px]"></i> Execute & Send
                     </button>
                 </div>
 
-                <div class="p-10 grid grid-cols-2 gap-10">
-                    <!-- Column 1 -->
-                    <div class="space-y-8">
+                <div class="p-10">
+                    <!-- TOP METADATA ROW -->
+                    <div class="grid grid-cols-3 gap-8 mb-12 pb-8 border-b border-slate-50">
                         <div>
-                            <label class="text-[10px] font-black text-gray-400 uppercase block mb-2 tracking-widest">Document Name / Title*</label>
-                            <input type="text" name="document_name" required class="w-full border-b-2 border-slate-100 p-2 outline-none focus:border-blue-900 transition-colors text-base font-bold text-blue-900" placeholder="e.g. Board Exam Results Oct 2024">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Current Date</label>
+                            <input type="text" value="<?= $current_date ?>" readonly class="w-full bg-slate-50 border-none p-2 rounded text-sm font-bold text-slate-600 outline-none">
                         </div>
-
                         <div>
-                            <label class="text-[10px] font-black text-gray-400 uppercase block mb-2 tracking-widest">Classification Type</label>
-                            <select name="doc_type_id" required class="w-full border-b-2 border-slate-100 p-2 outline-none focus:border-blue-900 bg-white text-sm font-semibold">
-                                <?php while($dt = $doc_types->fetch_assoc()): ?>
-                                    <option value="<?php echo $dt['doc_type_id']; ?>"><?php echo $dt['document_type_name']; ?></option>
-                                <?php endwhile; ?>
-                            </select>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Current Time</label>
+                            <input type="text" value="<?= $current_time ?>" readonly class="w-full bg-slate-50 border-none p-2 rounded text-sm font-bold text-slate-600 outline-none">
                         </div>
-
-                        <div>
-                            <label class="text-[10px] font-black text-gray-400 uppercase block mb-2 tracking-widest">Target Department</label>
-                            <select name="target_dept_id" required class="w-full border-b-2 border-slate-100 p-2 outline-none focus:border-blue-900 bg-white text-sm font-semibold">
-                                <?php while($dept = $departments->fetch_assoc()): ?>
-                                    <option value="<?php echo $dept['dept_id']; ?>"><?php echo $dept['dept_name']; ?></option>
-                                <?php endwhile; ?>
-                            </select>
-                        </div>
+                    
                     </div>
 
-                    <!-- Column 2 -->
-                    <div class="space-y-8">
-                        <div class="bg-slate-50 p-6 rounded-2xl border-2 border-dashed border-slate-200 text-center">
-                            <label class="text-[10px] font-black text-blue-900 uppercase block mb-4 tracking-widest">Select Scanned File</label>
-                            <input type="file" name="doc_file" required class="text-xs text-slate-500 file:mr-4 file:py-2 file:px-6 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-900 file:text-white hover:file:bg-blue-800 transition-all">
-                            <p class="text-[9px] text-slate-400 mt-4 font-bold uppercase italic">Allowed: PDF, JPG, PNG (Max 10MB)</p>
+                    <div class="grid grid-cols-2 gap-16">
+                        <!-- LEFT COLUMN: DOCUMENT INFO -->
+                        <div class="space-y-8">
+                            <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest border-l-4 border-blue-900 pl-3">Document Details</h3>
+                            
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Document Name</label>
+                                <input type="text" name="document_name" id="display_doc_name" required class="w-full border-b-2 border-slate-100 p-2 outline-none focus:border-blue-900 bg-white text-sm font-bold text-slate-700 transition-colors" placeholder="Type or auto-fill name...">
+                            </div>
+
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Classification Type</label>
+                                <input type="text" id="display_doc_type" readonly class="w-full border-b border-slate-100 p-2 text-sm font-bold text-slate-500 outline-none" placeholder="Auto-filled...">
+                            </div>
+
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Transfer By</label>
+                                <input type="text" readonly value="System Administrator" class="w-full border-b border-slate-100 p-2 text-sm font-bold text-blue-900 outline-none">
+                            </div>
                         </div>
 
-                        <div>
-                            <label class="text-[10px] font-black text-gray-400 uppercase block mb-2 tracking-widest">Routing Instructions / Remarks</label>
-                            <textarea name="remarks" class="w-full border-2 border-slate-100 p-4 rounded-2xl text-xs h-32 outline-none focus:border-blue-900 transition-all bg-slate-50/50" placeholder="Specify if urgent or requires specific signatures..."></textarea>
+                        <!-- RIGHT COLUMN: ROUTING -->
+                        <div class="space-y-8">
+                            <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest border-l-4 border-orange-500 pl-3">Transfer Destination</h3>
+
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Addressee / Recipient*</label>
+                                <select name="target_email" required class="w-full border-b-2 border-slate-100 p-2 outline-none focus:border-blue-900 bg-white text-sm font-bold">
+                                    <option value="" disabled selected>Select Recipient Email</option>
+                                    <?php while($u = $users_list->fetch_assoc()): ?>
+                                        <option value="<?= $u['email'] ?>">
+                                            <?= $u['user_first_name'] ?> <?= $u['user_last_name'] ?> (<?= $u['email'] ?>)
+                                        </option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Action Taken</label>
+                                <textarea name="action_taken" class="w-full border border-slate-100 p-4 rounded-xl text-xs h-20 outline-none focus:border-blue-900 transition-all bg-slate-50/30" placeholder="e.g. Reviewed and verified signatures..."></textarea>
+                            </div>
+
+                            <div>
+                                <label class="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Remarks</label>
+                                <textarea name="remarks" required class="w-full border border-slate-100 p-4 rounded-xl text-xs h-20 outline-none focus:border-blue-900 transition-all bg-slate-50/30" placeholder="Specify routing notes..."></textarea>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -112,6 +174,15 @@ $departments = $conn->query("SELECT * FROM department ORDER BY dept_name ASC");
     </main>
 
     <script>
+        function updateDocDetails() {
+            const select = document.getElementById('doc_id');
+            const selectedOption = select.options[select.selectedIndex];
+            
+            // This sets the value but the user can still edit it
+            document.getElementById('display_doc_name').value = selectedOption.getAttribute('data-name');
+            document.getElementById('display_doc_type').value = selectedOption.getAttribute('data-type');
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const icon = document.getElementById('toggle-icon');
