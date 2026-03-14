@@ -1,87 +1,115 @@
 <?php
+// 1. Enable Error Reporting for debugging (Remove this in production)
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+ob_start(); 
 session_start();
-// Change this to only include the config file
-require_once __DIR__ . '/../config/config.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // 2. Capture and sanitize input
-    $username = trim($_POST['username']);
-    $password = $_POST['password'];
+// 2. Fix Includes - Check if these paths are exactly correct
+require_once __DIR__ . "/../config/config.php";
+require_once __DIR__ . "/../helpers/jwt_helper.php"; // Check filename: jwt_helper.php vs jwt_helpers.php
+require_once __DIR__ . "/../vendor/autoload.php";
+require_once __DIR__ . '/../helpers/generalValidationMessage.php';
 
-    if (empty($username) || empty($password)) {
-        header("Location: ../public/index.php?error=empty");
-        exit();
-    }
+use Ramsey\Uuid\Uuid;
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = trim($_POST["username"] ?? '');
+    $password = trim($_POST["password"] ?? '');
+    $loginType = $_POST['login_type'] ?? 'admin';
 
     try {
-        // 3. Query to fetch user details across linked tables
-        // We join user, user_profile, user_role, and department
-        $sql = "SELECT 
-                    u.user_id, 
-                    u.username, 
-                    u.password, 
-                    u.user_status_id,
-                    r.role_name, 
-                    p.user_first_name, 
-                    p.user_last_name,
-                    d.dept_name
-                FROM user u
-                JOIN user_role r ON u.user_role_id = r.user_role_id
-                JOIN user_profile p ON u.user_id = p.user_id
-                JOIN department d ON p.dept_id = d.dept_id
-                WHERE u.username = ? 
-                LIMIT 1";
-
+        // Step 1: Find User
+        $sql = "SELECT user_id, username, password FROM user WHERE BINARY username = ? AND user_status_id < 4";
         $stmt = $conn->prepare($sql);
+        if (!$stmt) { throw new Exception("DB Prepare failed: " . $conn->error); }
+        
         $stmt->bind_param("s", $username);
         $stmt->execute();
         $result = $stmt->get_result();
 
-        if ($user = $result->fetch_assoc()) {
-            
-            // 4. Verify Password (using PHP's built-in password hashing)
-            if (password_verify($password, $user['password'])) {
+        if ($result->num_rows > 0) {
+            $user = $result->fetch_assoc();
+
+            // Step 2: Verify Password
+            if (password_verify($password, $user["password"])) {
                 
-                // 5. Check if account is Active (assuming status ID 1 = Active based on standard practice)
-                // You can adjust the user_status_id check based on your 'user_status' table contents
-                if ($user['user_status_id'] != 1 && $user['username'] !== 'doejane@email.com') {
-                     header("Location: ../public/index.php?error=inactive");
-                     exit();
+                // Step 3: Update status
+                $updateStatus = $conn->prepare("UPDATE user SET user_status_id = 1 WHERE user_id = ?");
+                $updateStatus->bind_param("s", $user["user_id"]);
+                $updateStatus->execute();
+
+                // Step 4: Fetch full user data
+                $refresh = $conn->prepare("
+                    SELECT u.user_id, u.username, up.dept_id, up.email, 
+                           u.user_role_id, ur.role_name,
+                           CONCAT(up.user_first_name, ' ', up.user_last_name) AS user_full_name
+                    FROM user u
+                    LEFT JOIN user_profile up ON up.user_id = u.user_id
+                    LEFT JOIN user_role ur ON ur.user_role_id = u.user_role_id
+                    WHERE u.user_id = ?;
+                ");
+                $refresh->bind_param("s", $user["user_id"]);
+                $refresh->execute();
+                $updatedUser = $refresh->get_result()->fetch_assoc();
+
+                // Step 5: Authorization
+                $isAdmin = in_array($updatedUser["role_name"], ["System Administrator", "Admin"]);
+                if ($loginType === "admin" && !$isAdmin) {
+                    setValidation("error", "Access Denied: Admin required.");
+                    header("Location: ../public/index.php");
+                    exit();
                 }
 
-                // 6. Regenerate session ID for security (prevents session fixation)
-                session_regenerate_id(true);
+                // Step 6: Generate JWT
+                $payload = [
+                    "user_id" => $updatedUser["user_id"],
+                    "username" => $updatedUser["username"],
+                    "role" => $updatedUser["role_name"],
+                    "exp" => time() + 3600 // 1 hour
+                ];
 
-                // 7. Store user details in Session
-                $_SESSION['user_id']   = $user['user_id'];
-                $_SESSION['username']  = $user['username'];
-                $_SESSION['role']      = $user['role_name'];
-                $_SESSION['dept']      = $user['dept_name'];
-                $_SESSION['full_name'] = $user['user_first_name'] . " " . $user['user_last_name'];
+                $jwt = JwtHelper::generateToken($payload);
 
-                // 8. Redirect to Dashboard
-                header("Location: ../public/admin_dashboard.php");
-                exit();
+                // Step 7: SET COOKIE - Modified for Localhost compatibility
+                // If you are on http://localhost, 'secure' must be false
+                $isSecure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
+                
+                setcookie("auth_token", $jwt, [
+                    "expires" => time() + 3600,
+                    "path" => "/",
+                    "domain" => "", // Leave empty for current domain
+                    "secure" => $isSecure, 
+                    "httponly" => true,
+                    "samesite" => "Lax", // "Strict" can sometimes block cookies on initial redirect
+                ]);
 
-            } else {
-                // Password incorrect
-                header("Location: ../public/index.php?error=invalid");
+                // Step 8: Logging
+                $log_id = Uuid::uuid4()->toString();
+                $log_stmt = $conn->prepare("INSERT INTO user_log (user_log_id, user_id, log_message, log_level) VALUES (?, ?, ?, 'LOGIN')");
+                $msg = $updatedUser['username'] . " Logged In";
+                $log_stmt->bind_param('sss', $log_id, $updatedUser["user_id"], $msg);
+                $log_stmt->execute();
+
+                // Step 9: Redirect
+                ob_end_clean(); // Clear buffer before redirect
+                if ($isAdmin) {
+                    header("Location: ../public/admin_dashboard.php");
+                } else {
+                    header("Location: ../public/index.php");
+                }
                 exit();
             }
-        } else {
-            // Username not found
-            header("Location: ../public/index.php?error=invalid");
-            exit();
         }
 
-    } catch (Exception $e) {
-        // Log error and show generic message
-        error_log($e->getMessage());
-        header("Location: ../public/index.php?error=system");
+        // Credentials failed
+        setValidation("error", "Incorrect Username or Password");
+        header("Location: ../public/index.php");
         exit();
+
+    } catch (Exception $e) {
+        die("Fatal Error: " . $e->getMessage()); // This will stop the "stuck" page and show the error
     }
-} else {
-    // If someone tries to access this file directly
-    header("Location: ../public/index.php");
-    exit();
 }

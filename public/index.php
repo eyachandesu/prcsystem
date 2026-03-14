@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,49 +12,51 @@
 <!-- Header-->
 
 <!-- Body -->
-  <body class="bg-slate-100 min-h-screen flex flex-col items-center justify-center font-sans p-4">
 
-    <div class="mb-6 text-center">
-      <img src="img/prclogo.png" alt="PRC Logo" class="h-20 w-20 mx-auto mb-3 drop-shadow-sm">
-      <h1 class="text-blue-900 font-bold text-xl uppercase tracking-tight">Document Tracking System</h1>
-      <p class="text-slate-500 text-xs font-semibold uppercase tracking-widest">Region 1 - Official Portal</p>
-    </div>
+<body class="bg-slate-100 min-h-screen flex flex-col items-center justify-center font-sans p-4">
 
-    <!-- Login Form -->
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+  <div class="mb-6 text-center">
+    <img src="img/prclogo.png" alt="PRC Logo" class="h-20 w-20 mx-auto mb-3 drop-shadow-sm">
+    <h1 class="text-blue-900 font-bold text-xl uppercase tracking-tight">Document Tracking System</h1>
+    <p class="text-slate-500 text-xs font-semibold uppercase tracking-widest">Region 1 - Official Portal</p>
+  </div>
+
+  <!-- Login Form -->
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
     <div class="h-1.5 bg-blue-700"></div>
-      <div class="p-8">
-        <h2 class="text-2xl font-bold text-slate-800 mb-6 text-center">Login</h2>
+    <div class="p-8">
+      <h2 class="text-2xl font-bold text-slate-800 mb-6 text-center">Login</h2>
 
-      <form action="../controllers/login_handler.php" method="POST" class="space-y-5">
-        
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 tracking-wider">Username</label>
+      <form action="../controllers/login_handler.php" method="POST" class="space-y-6">
+        <input type="hidden" name="login_type" value="admin">
+        <?php if (isset($_COOKIE['validation_message'])): ?>
+          <div id="validationBlock">
+            <span><?= showValidation() ?></span>
+          </div>
+        <?php endif; ?>
+        <!-- Username -->
+        <div class="space-y-1.5">
+          <label class="text-sm font-semibold text-gray-700">Username</label>
           <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-              <i class="fas fa-user text-sm"></i>
-            </span>
-            <input type="text" name="username" placeholder="Enter your username" required
-              class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+            <input type="text" name="username" required
+              class="w-full pl-10 pr-4 py-3 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#26B1AC] focus:ring-4 focus:ring-[#26B1AC]/10 outline-none transition-all duration-200"
+              placeholder="Enter your username">
           </div>
         </div>
- 
-        <div>
-          <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1 ml-1 tracking-wider">Password</label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
-              <i class="fas fa-lock text-sm"></i>
-            </span>
-            <input type="password" name="password" placeholder="••••••••" required
-              class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none text-sm">
+        <!-- Password -->
+        <div class="space-y-1.5">
+          <div class="flex justify-between items-center">
+            <label class="text-sm font-semibold text-gray-700">Password</label>
           </div>
-        </div>
-
-        <button type="submit" 
-          class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition-all uppercase text-xs tracking-widest flex items-center justify-center gap-2">
-          <span>Sign In</span>
-          <i class="fas fa-arrow-right text-[10px]"></i>
-        </button>
+          <div class="relative">
+            <input type="password" name="password" required
+              class="w-full pl-10 pr-4 py-3 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#26B1AC] focus:ring-4 focus:ring-[#26B1AC]/10 outline-none transition-all duration-200"
+              placeholder="••••••••">
+          </div>
+          <button type="submit"
+            class="w-full py-3.5 rounded-lg bg-[#413072] hover:bg-[#34265b] text-white font-semibold shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+            Sign In
+          </button>
       </form>
 
       <div class="mt-8">
@@ -63,11 +66,13 @@
           <div class="flex-grow h-px bg-slate-200"></div>
         </div>
         <!-- Link to signup.php (Assuming it is in the same public folder) -->
-        <a href="signup.php" class="w-full border-2 border-blue-700 text-blue-700 block text-center font-bold py-3 rounded-xl uppercase text-xs tracking-widest">
+        <a href="signup.php"
+          class="w-full border-2 border-blue-700 text-blue-700 block text-center font-bold py-3 rounded-xl uppercase text-xs tracking-widest">
           Sign Up
         </a>
       </div>
     </div>
   </div>
 </body>
+
 </html>
