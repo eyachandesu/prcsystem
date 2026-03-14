@@ -1,3 +1,15 @@
+<?php if (isset($_GET['error'])): ?>
+    <div style="color: red; background: #fee; padding: 10px; margin-bottom: 10px; border-radius: 5px; font-size: 12px; font-weight: bold;">
+        <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($_GET['error']); ?>
+    </div>
+<?php endif; ?>
+
+<?php if (isset($_GET['success'])): ?>
+    <div style="color: green; background: #efe; padding: 10px; margin-bottom: 10px; border-radius: 5px; font-size: 12px; font-weight: bold;">
+        <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_GET['success']); ?>
+    </div>
+<?php endif; ?>
+
 <!doctype html>
 <html lang="en">
 
@@ -7,7 +19,7 @@
   <!-- Use TWO dots if server is run from root and you visit /public/index.php -->
   <link href="../dist/output.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <title>Login - PRC Document Tracking</title>
+  <title>Login - PRCRO1 Document Tracking</title>
 </head>
 <!-- Header-->
 

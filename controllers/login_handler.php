@@ -5,6 +5,13 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 ob_start(); 
+// FIX 1: Solve the Mac/XAMPP session permission issue
+$sessionPath = __DIR__ . '/../sessions';
+if (!file_exists($sessionPath)) {
+    mkdir($sessionPath, 0777, true);
+    chmod($sessionPath, 0777);
+}
+session_save_path($sessionPath);
 session_start();
 
 // 2. Fix Includes - Check if these paths are exactly correct
@@ -102,6 +109,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 }
                 exit();
             }
+        } else {
+            // Username not found
+            header("Location: ../public/index.php?error=" . urlencode("Invalid username or password."));
+            exit();
         }
 
         // Credentials failed
@@ -110,6 +121,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
 
     } catch (Exception $e) {
+        // Log error and show message
+        error_log($e->getMessage());
+        header("Location: ../public/index.php?error=" . urlencode("System error occurred. Please try again later."));
+        exit();
         die("Fatal Error: " . $e->getMessage()); // This will stop the "stuck" page and show the error
     }
+} else {
+    header("Location: ../public/index.php");
+    exit();
 }

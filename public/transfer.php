@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once "../config/config.php";
-if (!isset($_SESSION['user_id'])) { header("Location: login.php"); exit(); }
+if (!isset($_SESSION['user_id'])) { header("Location: index.php"); exit(); }
 
 // 1. Fetch Recipients (Excluding current user)
 $users_query = $conn->prepare("SELECT email, user_first_name, user_last_name FROM user_profile WHERE user_id != ? ORDER BY email ASC");
@@ -20,7 +20,7 @@ $my_docs->bind_param("s", $_SESSION['user_id']);
 $my_docs->execute();
 $docs_res = $my_docs->get_result();
 
-// Get current date/time for the UI
+// Get current date/time
 date_default_timezone_set('Asia/Manila');
 $current_date = date('m/d/Y');
 $current_time = date('h:i A');
@@ -30,7 +30,9 @@ $current_time = date('h:i A');
 <head>
     <meta charset="UTF-8">
     <title>Transfer Document | PRC DTS</title>
+    <!-- Keep CDN for immediate styling, but also link your local file -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="dist/output.css" rel="stylesheet"> 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .sidebar-transition { transition: width 0.3s ease-in-out; }
@@ -55,29 +57,27 @@ $current_time = date('h:i A');
         <nav class="flex-1 p-4 space-y-2">
             <a href="admin_dashboard.php" class="flex items-center p-3 text-slate-600 hover:bg-slate-100 rounded-lg group">
                 <i class="fas fa-chart-line w-6 text-center mr-3 text-lg group-hover:text-blue-900"></i>
-                <span class="nav-label opacity-100 whitespace-nowrap">Dashboard</span>
+                <span class="nav-label whitespace-nowrap">Dashboard</span>
             </a>
-            
             <a href="tracking.php" class="flex items-center p-3 text-slate-600 hover:bg-slate-100 rounded-lg group">
                 <i class="fas fa-search w-6 text-center mr-3 text-lg group-hover:text-blue-900"></i>
-                <span class="nav-label opacity-100 whitespace-nowrap">Document Tracking</span>
+                <span class="nav-label whitespace-nowrap">Document Tracking</span>
             </a>
             <a href="receive.php" class="flex items-center p-3 text-slate-600 hover:bg-slate-100 rounded-lg group">
-                <i class="fas fa-file-import w-6 text-center mr-3 text-lg"></i>
+                <i class="fas fa-file-import w-6 text-center mr-3 text-lg group-hover:text-blue-900"></i>
                 <span class="nav-label">Receive Document</span>
             </a>
             <a href="transfer.php" class="flex items-center p-3 bg-blue-100 text-blue-900 rounded-lg font-bold shadow-sm">
                 <i class="fas fa-exchange-alt w-6 text-center mr-3 text-lg"></i>
-                <span class="nav-label opacity-100 whitespace-nowrap">Transfer Document</span>
+                <span class="nav-label whitespace-nowrap">Transfer Document</span>
             </a>
         </nav>
     </aside>
-
+    
     <!-- MAIN CONTENT -->
     <main class="flex-1 p-10 overflow-y-auto">
         <div class="max-w-5xl mx-auto">
             
-            <!-- HEADER & VALIDATION STATUS -->
             <div class="flex justify-between items-end mb-8">
                 <div>
                     <h2 class="text-3xl font-black text-slate-800 tracking-tight">Transfer Document</h2>
@@ -91,7 +91,6 @@ $current_time = date('h:i A');
 
             <form action="../controllers/DocumentController.php" method="POST" class="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
                 
-                <!-- TOOLBAR -->
                 <div class="bg-slate-50 p-4 border-b border-slate-100 flex justify-between items-center px-8">
                     <div class="flex gap-4">
                         <button type="button" class="text-[10px] font-black text-slate-400 hover:text-blue-900 uppercase tracking-widest transition-colors">
@@ -117,34 +116,41 @@ $current_time = date('h:i A');
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Current Time</label>
                             <input type="text" value="<?= $current_time ?>" readonly class="w-full bg-slate-50 border-none p-2 rounded text-sm font-bold text-slate-600 outline-none">
                         </div>
-                    
+                        <div>
+                            <!-- RESTORED DROPDOWN -->
+                            <label class="text-[10px] font-black text-blue-900 uppercase tracking-widest block mb-2">Document Code (Ref #)*</label>
+                            <select name="doc_id" id="doc_id" required onchange="updateDocDetails()" class="w-full border-b-2 border-blue-900 p-2 outline-none bg-white text-sm font-black text-blue-900">
+                                <option value="" disabled selected>-- Select Reference --</option>
+                                <?php while($doc = $docs_res->fetch_assoc()): ?>
+                                    <option value="<?= $doc['doc_id'] ?>" 
+                                            data-name="<?= htmlspecialchars($doc['applicant_name']) ?>" 
+                                            data-type="<?= htmlspecialchars($doc['document_type_name']) ?>">
+                                        <?= $doc['ref_no'] ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-16">
-                        <!-- LEFT COLUMN: DOCUMENT INFO -->
                         <div class="space-y-8">
                             <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest border-l-4 border-blue-900 pl-3">Document Details</h3>
-                            
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Document Name</label>
-                                <input type="text" name="document_name" id="display_doc_name" required class="w-full border-b-2 border-slate-100 p-2 outline-none focus:border-blue-900 bg-white text-sm font-bold text-slate-700 transition-colors" placeholder="Type or auto-fill name...">
+                                <input type="text" name="document_name" id="display_doc_name" required class="w-full border-b-2 border-slate-100 p-2 outline-none focus:border-blue-900 bg-white text-sm font-bold text-slate-700 transition-colors" placeholder="Auto-filled or type name...">
                             </div>
-
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Classification Type</label>
                                 <input type="text" id="display_doc_type" readonly class="w-full border-b border-slate-100 p-2 text-sm font-bold text-slate-500 outline-none" placeholder="Auto-filled...">
                             </div>
-
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Transfer By</label>
                                 <input type="text" readonly value="System Administrator" class="w-full border-b border-slate-100 p-2 text-sm font-bold text-blue-900 outline-none">
                             </div>
                         </div>
 
-                        <!-- RIGHT COLUMN: ROUTING -->
                         <div class="space-y-8">
                             <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest border-l-4 border-orange-500 pl-3">Transfer Destination</h3>
-
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Addressee / Recipient*</label>
                                 <select name="target_email" required class="w-full border-b-2 border-slate-100 p-2 outline-none focus:border-blue-900 bg-white text-sm font-bold">
@@ -156,12 +162,10 @@ $current_time = date('h:i A');
                                     <?php endwhile; ?>
                                 </select>
                             </div>
-
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Action Taken</label>
                                 <textarea name="action_taken" class="w-full border border-slate-100 p-4 rounded-xl text-xs h-20 outline-none focus:border-blue-900 transition-all bg-slate-50/30" placeholder="e.g. Reviewed and verified signatures..."></textarea>
                             </div>
-
                             <div>
                                 <label class="text-[10px] font-black text-slate-400 uppercase block mb-2 tracking-widest">Remarks</label>
                                 <textarea name="remarks" required class="w-full border border-slate-100 p-4 rounded-xl text-xs h-20 outline-none focus:border-blue-900 transition-all bg-slate-50/30" placeholder="Specify routing notes..."></textarea>
@@ -177,10 +181,10 @@ $current_time = date('h:i A');
         function updateDocDetails() {
             const select = document.getElementById('doc_id');
             const selectedOption = select.options[select.selectedIndex];
-            
-            // This sets the value but the user can still edit it
-            document.getElementById('display_doc_name').value = selectedOption.getAttribute('data-name');
-            document.getElementById('display_doc_type').value = selectedOption.getAttribute('data-type');
+            if(selectedOption.value !== "") {
+                document.getElementById('display_doc_name').value = selectedOption.getAttribute('data-name');
+                document.getElementById('display_doc_type').value = selectedOption.getAttribute('data-type');
+            }
         }
 
         function toggleSidebar() {
