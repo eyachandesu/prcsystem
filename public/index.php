@@ -1,14 +1,14 @@
-<?php if (isset($_GET['error'])): ?>
-    <div style="color: red; background: #fee; padding: 10px; margin-bottom: 10px; border-radius: 5px; font-size: 12px; font-weight: bold;">
-        <i class="fas fa-exclamation-circle"></i> <?php echo htmlspecialchars($_GET['error']); ?>
-    </div>
-<?php endif; ?>
+<?php
 
-<?php if (isset($_GET['success'])): ?>
-    <div style="color: green; background: #efe; padding: 10px; margin-bottom: 10px; border-radius: 5px; font-size: 12px; font-weight: bold;">
-        <i class="fas fa-check-circle"></i> <?php echo htmlspecialchars($_GET['success']); ?>
-    </div>
-<?php endif; ?>
+$sessionPath = __DIR__ . '/../sessions';
+if (!file_exists($sessionPath)) {
+  mkdir($sessionPath, 0777, true);
+}
+session_save_path($sessionPath);
+session_start();
+
+require_once __DIR__ . '/../helpers/generalValidationMessage.php';
+?>
 
 <!doctype html>
 <html lang="en">
@@ -41,9 +41,10 @@
 
       <form action="../controllers/login_handler.php" method="POST" class="space-y-6">
         <input type="hidden" name="login_type" value="admin">
-        <?php if (isset($_COOKIE['validation_message'])): ?>
-          <div id="validationBlock">
-            <span><?= showValidation() ?></span>
+        <?php if (isset($_SESSION['validation_message'])): ?>
+          <div id="validationBlock" class="p-3 mb-4 text-sm text-red-700 bg-red-100 border border-red-200 rounded-lg">
+            <i class="fa-solid fa-circle-exclamation mr-2"></i>
+            <?= showValidation() ?>
           </div>
         <?php endif; ?>
         <!-- Username -->
@@ -65,24 +66,13 @@
               class="w-full pl-10 pr-4 py-3 rounded-lg bg-white border border-gray-200 text-gray-900 placeholder-gray-400 focus:border-[#26B1AC] focus:ring-4 focus:ring-[#26B1AC]/10 outline-none transition-all duration-200"
               placeholder="••••••••">
           </div>
-          <button type="submit"
-            class="w-full py-3.5 rounded-lg bg-[#413072] hover:bg-[#34265b] text-white font-semibold shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
-            Sign In
-          </button>
-      </form>
 
-      <div class="mt-8">
-        <div class="flex items-center mb-6">
-          <div class="flex-grow h-px bg-slate-200"></div>
-          <span class="px-3 text-[10px] text-slate-400 font-bold uppercase tracking-widest">Create an Account</span>
-          <div class="flex-grow h-px bg-slate-200"></div>
         </div>
-        <!-- Link to signup.php (Assuming it is in the same public folder) -->
-        <a href="signup.php"
-          class="w-full border-2 border-blue-700 text-blue-700 block text-center font-bold py-3 rounded-xl uppercase text-xs tracking-widest">
-          Sign Up
-        </a>
-      </div>
+        <button type="submit"
+          class="w-full py-3.5 rounded-lg bg-[#413072] hover:bg-[#34265b] text-black font-semibold shadow-lg shadow-purple-900/10 hover:shadow-purple-900/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+          Sign In
+        </button>
+      </form>
     </div>
   </div>
 </body>
