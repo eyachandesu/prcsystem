@@ -25,7 +25,7 @@ use Ramsey\Uuid\Uuid;
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = trim($_POST["username"] ?? '');
     $password = trim($_POST["password"] ?? '');
-    $loginType = $_POST['login_type'] ?? 'admin';
+    $loginType = $_POST['login_type'] ?? 'Admin';
 
     try {
         // Step 1: Find User
