@@ -63,5 +63,5 @@ npx tailwindcss -i ./src/input.css -o ./public/output.css --watch
 
 
 ``` how to run php in localhost
-php -S localhost:8000 -t public
+php -S localhost:8000
 ````

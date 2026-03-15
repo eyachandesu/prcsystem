@@ -2,7 +2,7 @@
 date_default_timezone_set('Asia/Manila');
 $host = "localhost";
 $user = "root";
-$pass = "";
+$pass = "12345";
 $dbname = "prcsystem_db"; // Updated to your new DB name
 
 $conn = new mysqli($host, $user, $pass, $dbname);
