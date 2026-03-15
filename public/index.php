@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../helpers/generalValidationMessage.php';
 
 $sessionPath = __DIR__ . '/../sessions';
 if (!file_exists($sessionPath)) {
@@ -6,8 +7,6 @@ if (!file_exists($sessionPath)) {
 }
 session_save_path($sessionPath);
 session_start();
-
-require_once __DIR__ . '/../helpers/generalValidationMessage.php';
 ?>
 
 <!doctype html>
