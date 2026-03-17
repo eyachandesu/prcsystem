@@ -16,9 +16,9 @@ session_start();
 
 // 2. Fix Includes - Check if these paths are exactly correct
 require_once __DIR__ . "/../config/config.php";
-require_once __DIR__ . "/../helpers/jwt_helper.php"; // Check filename: jwt_helper.php vs jwt_helpers.php
+require_once __DIR__ . "/../helper/jwt_helper.php"; // Check filename: jwt_helper.php vs jwt_helpers.php
 require_once __DIR__ . "/../vendor/autoload.php";
-require_once __DIR__ . '/../helpers/generalValidationMessage.php';
+require_once __DIR__ . '/../helper/generalValidationMessage.php';
 
 use Ramsey\Uuid\Uuid;
 
@@ -66,7 +66,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $isAdmin = in_array($updatedUser["role_name"], ["System Administrator", "Admin"]);
                 if ($loginType === "admin" && !$isAdmin) {
                     setValidation("error", "Access Denied: Admin required.");
-                    header("Location: ../public/index.php");
+                    header("Location:/index.php");
                     exit();
                 }
 
@@ -103,31 +103,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Step 9: Redirect
                 ob_end_clean(); // Clear buffer before redirect
                 if ($isAdmin) {
-                    header("Location: ../public/admin_dashboard.php");
+                    header("Location: /admin_dashboard.php");
                 } else {
-                    header("Location: ../public/index.php");
+                    header("Location: /index.php");
                 }
                 exit();
             }
         } else {
             // Username not found
-            header("Location: ../public/index.php?error=" . urlencode("Invalid username or password."));
+            header("Location: /index.php?error=" . urlencode("Invalid username or password."));
             exit();
         }
 
         // Credentials failed
         setValidation("error", "Incorrect Username or Password");
-        header("Location: ../public/index.php");
+        header("Location: /index.php");
         exit();
 
     } catch (Exception $e) {
         // Log error and show message
         error_log($e->getMessage());
-        header("Location: ../public/index.php?error=" . urlencode("System error occurred. Please try again later."));
+        header("Location: /index.php?error=" . urlencode("System error occurred. Please try again later."));
         exit();
         die("Fatal Error: " . $e->getMessage()); // This will stop the "stuck" page and show the error
     }
 } else {
-    header("Location: ../public/index.php");
+    header("Location: /index.php");
     exit();
 }

@@ -1,5 +1,5 @@
 <?php
-require_once "../helper/jwt_helper.php";
+require_once __DIR__ . '/../helper/jwt_helper.php';
 
 function checkAuth($requiredRole = null) {
     if (!isset($_COOKIE['auth_token'])) {

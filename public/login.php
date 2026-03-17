@@ -1,12 +1,17 @@
 <?php
-require_once __DIR__ . '/../helpers/generalValidationMessage.php';
-
+require_once __DIR__ . '/../helper/generalValidationMessage.php';
 $sessionPath = __DIR__ . '/../sessions';
+
 if (!file_exists($sessionPath)) {
   mkdir($sessionPath, 0777, true);
 }
 session_save_path($sessionPath);
 session_start();
+
+if (isset($_SESSION['user_id'])) {
+    header("Location: /dashboard.php");
+    exit();
+}
 ?>
 
 <!doctype html>
