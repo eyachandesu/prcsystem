@@ -4,7 +4,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
-ob_start(); 
+ob_start();
 // FIX 1: Solve the Mac/XAMPP session permission issue
 $sessionPath = __DIR__ . '/../sessions';
 if (!file_exists($sessionPath)) {
@@ -31,8 +31,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Step 1: Find User
         $sql = "SELECT user_id, username, password FROM user WHERE BINARY username = ? AND user_status_id < 4";
         $stmt = $conn->prepare($sql);
-        if (!$stmt) { throw new Exception("DB Prepare failed: " . $conn->error); }
-        
+        if (!$stmt) {
+            throw new Exception("DB Prepare failed: " . $conn->error);
+        }
+
         $stmt->bind_param("s", $username);
         $stmt->execute();
         $result = $stmt->get_result();
@@ -42,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             // Step 2: Verify Password
             if (password_verify($password, $user["password"])) {
-                
+
                 // Step 3: Update status
                 $updateStatus = $conn->prepare("UPDATE user SET user_status_id = 1 WHERE user_id = ?");
                 $updateStatus->bind_param("s", $user["user_id"]);
@@ -77,18 +79,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     "role" => $updatedUser["role_name"],
                     "exp" => time() + 3600 // 1 hour
                 ];
+                $sessionPath = __DIR__ . '/../sessions';
+                session_save_path($sessionPath);
+                session_start();
 
                 $jwt = JwtHelper::generateToken($payload);
 
                 // Step 7: SET COOKIE - Modified for Localhost compatibility
                 // If you are on http://localhost, 'secure' must be false
                 $isSecure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on';
-                
+
                 setcookie("auth_token", $jwt, [
                     "expires" => time() + 3600,
                     "path" => "/",
                     "domain" => "", // Leave empty for current domain
-                    "secure" => $isSecure, 
+                    "secure" => $isSecure,
                     "httponly" => true,
                     "samesite" => "Lax", // "Strict" can sometimes block cookies on initial redirect
                 ]);

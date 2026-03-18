@@ -1,26 +1,29 @@
 <?php
 require_once __DIR__ . '/../helper/jwt_helper.php';
+require_once __DIR__ . '/../helper/generalValidationMessage.php';
 
 function checkAuth($requiredRole = null) {
     if (!isset($_COOKIE['auth_token'])) {
-        header("Location: login.php?error=unauthorized");
+        setValidation("error", "Please login to access this page.");
+        header("Location: /public/login.php");
         exit();
     }
 
     $decoded = JwtHelper::verifyToken($_COOKIE['auth_token']);
 
     if (!$decoded) {
-        // Token expired or tampered
         setcookie("auth_token", "", time() - 3600, "/");
-        header("Location: login.php?error=session_expired");
+        setValidation("info", "Your session has expired. Please login again.");
+        header("Location: /public/login.php");
         exit();
     }
 
-    // Check role if required
-    if ($requiredRole && $decoded->data->role !== $requiredRole) {
-        header("Location: index.php?error=forbidden");
+    // Role check (matches the nested 'data' from the helper fix above)
+    if ($requiredRole && (!isset($decoded->data->role) || $decoded->data->role !== $requiredRole)) {
+        setValidation("error", "You do not have permission to view that page.");
+        header("Location: /index.php"); // Redirect to a safe page instead of login to avoid confusion
         exit();
     }
 
-    return $decoded->data; // Return user info for use in the page
+    return $decoded->data; 
 }

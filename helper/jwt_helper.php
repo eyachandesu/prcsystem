@@ -22,14 +22,15 @@ class JwtHelper
 
         try {
             // Load .env from the root directory
-            $dotenv = Dotenv::createImmutable(__DIR__ . "/../");
-            $dotenv->safeLoad();
+            $dotenv = \Dotenv\Dotenv::createImmutable(__DIR__ . '/../'); 
+        $dotenv->safeLoad();
 
-            // Try $_ENV first, then getenv() as a fallback
-            self::$secret_key = $_ENV["SECRET_KEY"] ?? getenv("SECRET_KEY");
+        self::$secret_key = $_ENV["SECRET_KEY"] ?? getenv("SECRET_KEY");
 
-            if (empty(self::$secret_key)) {
-                throw new Exception("SECRET_KEY is not defined in the environment.");
+        if (empty(self::$secret_key)) {
+            // If .env is missing, the JWT will always fail. 
+            // This is a common reason for the "loop".
+            throw new Exception("SECRET_KEY missing.");
             }
         } catch (Exception $e) {
             // Log the error and stop execution or handle it gracefully
@@ -42,18 +43,17 @@ class JwtHelper
      * @param array $payload Data to encode
      * @return string
      */
-    public static function generateToken(array $payload)
-    {
-        self::init();
+  public static function generateToken(array $userData)
+{
+    self::init();
+    $payload = [
+        'iat' => time(),
+        'exp' => time() + (60 * 60),
+        'data' => $userData // Nest the data here so middleware works
+    ];
 
-        // Optional: Add standard claims if not present
-        if (!isset($payload['iat']))
-            $payload['iat'] = time();
-        if (!isset($payload['exp']))
-            $payload['exp'] = time() + (60 * 60); // Default 1 hour
-
-        return JWT::encode($payload, self::$secret_key, self::$algorithm);
-    }
+    return JWT::encode($payload, self::$secret_key, self::$algorithm);
+}
 
     /**
      * @param string $token

@@ -18,7 +18,7 @@ function showValidation(): ?string
         return null;
     }
 
-    $message = $_COOKIE["validation_message"];
+    $message = htmlspecialchars($_COOKIE["validation_message"]);
     $type = $_COOKIE["validation_type"];
 
     // ✅ clear cookies here (safe because of ob_start at top)
