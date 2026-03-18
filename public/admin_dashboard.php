@@ -18,14 +18,16 @@ $user = checkAuth('System Administrator'); // Change 'Admin' to 'System Administ
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="../dist/output.css" rel="stylesheet">
     <title>Admin Dashboard</title>
 </head>
+
 <body class="bg-slate-50">
-    
+
     <!-- Show success message if they just logged in -->
     <div class="max-w-4xl mx-auto mt-4">
         <?= showValidation() ?>
@@ -33,16 +35,18 @@ $user = checkAuth('System Administrator'); // Change 'Admin' to 'System Administ
 
     <div class="p-8">
         <h1 class="text-2xl font-bold">Admin Dashboard</h1>
-        <p class="text-gray-600">Welcome back, <span class="font-bold text-blue-600"><?= htmlspecialchars($user->full_name) ?></span>!</p>
-        
+        <p class="text-gray-600">Welcome back, <span
+                class="font-bold text-blue-600"><?= htmlspecialchars($user->full_name) ?></span>!</p>
+
         <div class="mt-6 p-6 bg-white rounded-xl shadow-sm border border-slate-200">
             <h2 class="font-semibold mb-2">User Info (Decoded from JWT):</h2>
             <pre class="bg-slate-100 p-4 rounded text-xs"><?php print_r($user); ?></pre>
         </div>
 
-        <div class="mt-6">
-            <a href="logout.php" class="text-red-600 hover:underline">Logout</a>
-        </div>
+        <a href="../controllers/logout_handler.php" class="text-red-500 hover:text-red-700 font-medium">
+            <i class="fa-solid fa-right-from-bracket mr-2"></i>Logout
+        </a>
     </div>
 </body>
+
 </html>
