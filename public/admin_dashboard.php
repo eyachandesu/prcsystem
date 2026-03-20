@@ -23,11 +23,17 @@ $user = checkAuth('System Administrator'); // Change 'Admin' to 'System Administ
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="../dist/output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <title>Admin Dashboard</title>
 </head>
 
 <body class="bg-slate-50">
 
+<body class="bg-slate-50">
+
+    <?php include __DIR__ . '/../templates/navbar.php'; ?>
+
+    <!-- Your content -->
     <!-- Show success message if they just logged in -->
     <div class="max-w-4xl mx-auto mt-4">
         <?= showValidation() ?>
