@@ -7,8 +7,6 @@
 # Node dependencies
 /node_modules/
 
-# Logs
-*.log
 
 # Mac system files
 .DS_Store
