@@ -67,7 +67,7 @@ CREATE TABLE `user_role` (
   PRIMARY KEY (`user_role_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-INSERT INTO `user_role` (`user_role_id`, `role_name`) VALUES (1, 'System Administrator');
+INSERT INTO `user_role` (`user_role_id`, `role_name`) VALUES (1, 'Admin'), (2, 'User');
 
 -- Table: user_status
 DROP TABLE IF EXISTS `user_status`;
@@ -100,7 +100,7 @@ CREATE TABLE `user` (
   `username` varchar(45) NOT NULL,
   `password` varchar(255) NOT NULL,
   `user_role_id` int NOT NULL,
-  `user_status_id` int NOT NULL,
+  `user_status_id` int NOT NULL DEFAULT 1,
   `user_created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `user_updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`),
@@ -108,6 +108,10 @@ CREATE TABLE `user` (
   CONSTRAINT `user_ibfk_1` FOREIGN KEY (`user_role_id`) REFERENCES `user_role` (`user_role_id`) ON DELETE CASCADE,
   CONSTRAINT `user_ibfk_2` FOREIGN KEY (`user_status_id`) REFERENCES `user_status` (`user_status_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO `user` (`user_id`, `username`, `password`, `user_role_id`, `user_status_id`) 
+VALUES(
+  'dac48d52-2a90-11f1-b096-088fc334d711', 'admin', '$2y$12$IjCI8/t6ild1YCRd2uvl8.68MgXut9QpyqAyQ9mW4t1l/cgZmF9jW', 1, 1);
 
 -- Table: user_profile
 DROP TABLE IF EXISTS `user_profile`;
@@ -117,13 +121,19 @@ CREATE TABLE `user_profile` (
   `email` varchar(255) NOT NULL,
   `user_first_name` varchar(45) NOT NULL,
   `user_last_name` varchar(45) NOT NULL,
+  `user_middle_name` varchar(45) DEFAULT NULL,
+  `user_prof` varchar(255) DEFAULT NULL,
   `user_birthdate` date NOT NULL,
   `user_profile_created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `user_updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email` (`email`),
   CONSTRAINT `user_profile_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `user_profile_ibfk_2` FOREIGN KEY (`dept_id`) REFERENCES `department` (`dept_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+INSERT INTO `user_profile`(`user_id`, `dept_id`, `email`, `user_first_name`, `user_middle_name`,`user_last_name`, `user_birthdate`)
+VALUE('dac48d52-2a90-11f1-b096-088fc334d711', 1, 'email@gmail.com', 'Mickyl', 'Gaytana', 'Sumagang', '2003-06-06');
 
 -- Table: user_log (Audit Trail for Logins)
 DROP TABLE IF EXISTS `user_log`;
@@ -147,7 +157,7 @@ CREATE TABLE `document` (
   `doc_id` char(36) NOT NULL,
   `current_user_id` char(36) NOT NULL,
   `current_dept_id` int NOT NULL,
-  `doc_status_id` int NOT NULL,
+  `doc_status_id` int NOT NULL DEFAULT 1,
   `doc_type_id` int NOT NULL,
   `ref_no` varchar(50) DEFAULT NULL,
   `uploaded_by` char(36) NOT NULL,
