@@ -11,7 +11,7 @@ require_once __DIR__ . '/../helper/generalValidationMessage.php';
  *  - Check if the user has the 'Admin' role
  *  - Redirect to login.php automatically if any of the above fails
  */
-$user = checkAuth('System Administrator'); // Change 'Admin' to 'System Administrator' if that's the exact string in your DB
+$user = checkAuth('Admin'); // Change 'Admin' to 'System Administrator' if that's the exact string in your DB
 
 // If the code reaches here, the user is authenticated.
 ?>
@@ -36,7 +36,7 @@ $user = checkAuth('System Administrator'); // Change 'Admin' to 'System Administ
     <!-- Your content -->
     <!-- Show success message if they just logged in -->
     <div class="max-w-4xl mx-auto mt-4">
-        <?= showValidation() ?>
+        <?= showValidation() ?>z
     </div>
 
     <div class="p-8">

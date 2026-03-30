@@ -65,12 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $updatedUser = $refresh->get_result()->fetch_assoc();
 
                 // Step 5: Authorization
-                $isAdmin = in_array($updatedUser["role_name"], ["System Administrator", "Admin"]);
-                if ($loginType === "admin" && !$isAdmin) {
-                    setValidation("error", "Access Denied: Admin required.");
-                    header("Location:/index.php");
-                    exit();
-                }
+               
 
                 // Step 6: Generate JWT
                 $payload = [
@@ -79,9 +74,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     "role" => $updatedUser["role_name"],
                     "exp" => time() + 3600 // 1 hour
                 ];
-                $sessionPath = __DIR__ . '/../sessions';
-                session_save_path($sessionPath);
-                session_start();
 
                 $jwt = JwtHelper::generateToken($payload);
 
@@ -110,7 +102,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 if ($isAdmin) {
                     header("Location: /admin_dashboard.php");
                 } else {
-                    header("Location: /index.php");
+                    header("Location: /user_dashboard.php"); // Change /index.php to this
                 }
                 exit();
             }

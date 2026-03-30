@@ -8,7 +8,7 @@ if (isset($_COOKIE['auth_token']) && !isset($_GET['error'])) {
     
     // Check for $decoded->data->role (The UUID doesn't affect this part)
     if ($decoded && isset($decoded->data->role)) {
-        if (trim($decoded->data->role) === 'System Administrator') {
+        if (trim($decoded->data->role) === 'Admin') {
             header("Location: /public/admin_dashboard.php");
             exit();
         }
@@ -45,7 +45,7 @@ if (isset($_COOKIE['auth_token']) && !isset($_GET['error'])) {
       </div>
 
       <form action="../controllers/login_handler.php" method="POST" class="space-y-6">
-        <input type="hidden" name="login_type" value="admin">
+        <input type="hidden" name="login_type"">
         
         <div class="space-y-1.5">
           <label class="text-sm font-semibold text-gray-700">Username</label>

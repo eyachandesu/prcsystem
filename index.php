@@ -4,23 +4,22 @@ require_once __DIR__ . "/helper/jwt_helper.php";
 if (isset($_COOKIE['auth_token'])) {
     $decoded = JwtHelper::verifyToken($_COOKIE['auth_token']);
     
-    if ($decoded && isset($decoded->data->role)) {
-        $role = $decoded->data->role;
+    // Adjust this based on if your payload has a 'data' wrapper or not
+    $role = $decoded->role ?? $decoded->data->role ?? null;
 
-        // Redirect based on the actual role in the token
-        if ($role === 'System Administrator') {
+    if ($role) {
+        // Use an array to catch all "Admin-level" roles
+        $adminRoles = ['Admin', 'System Administrator'];
+
+        if (in_array($role, $adminRoles)) {
             header("Location: /public/admin_dashboard.php");
-            exit();
         } else {
-            // If they are a normal user, send them to the user area (or just stay here)
-             header("Location: /public/user_dashboard.php"); 
-             exit();
-            echo "Welcome, User. You do not have Admin access.";
-            exit();
+            header("Location: /public/user_dashboard.php");
         }
+        exit();
     }
 }
 
-// No valid token? Go to login.
+// Default fallback
 header("Location: /public/login.php");
 exit();
