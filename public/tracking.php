@@ -1,7 +1,8 @@
 <?php
 session_start();
 require_once "../config/config.php";
-if (!isset($_SESSION['user_id'])) { header("Location: index.php"); exit(); }
+require_once "../helper/jwt_helper.php";
+require_once "../helper/generalValidationMessage.php";  
 
 // Helper function for "Age of Document" (Legacy Feature)
 function getAge($date) {
@@ -53,7 +54,7 @@ $documents = $conn->query($query);
         <nav class="flex-1 p-4 space-y-2">
             <a href="admin_dashboard.php" class="flex items-center p-3 text-slate-600 hover:bg-slate-100 rounded-lg group">
                 <i class="fas fa-chart-line w-6 text-center mr-3 text-lg group-hover:text-blue-900"></i>
-                <span class="nav-label opacity-100 whitespace-nowrap">Dashboard</span>
+                <span class="nav-label opacity-100 whitespace-nowrap">Overview</span>
             </a>
             
             <a href="tracking.php" class="flex items-center p-3 bg-blue-100 text-blue-900 rounded-lg font-bold shadow-sm">

@@ -1,8 +1,7 @@
 <?php
 session_start();
 require_once "../config/config.php";
-if (!isset($_SESSION['user_id'])) { header("Location: index.php"); exit(); }
-
+require_once "../helper/jwt_helper.php";
 // 1. Fetch Recipients (Excluding current user)
 $users_query = $conn->prepare("SELECT email, user_first_name, user_last_name FROM user_profile WHERE user_id != ? ORDER BY email ASC");
 $users_query->bind_param("s", $_SESSION['user_id']);
@@ -57,7 +56,7 @@ $current_time = date('h:i A');
         <nav class="flex-1 p-4 space-y-2">
             <a href="admin_dashboard.php" class="flex items-center p-3 text-slate-600 hover:bg-slate-100 rounded-lg group">
                 <i class="fas fa-chart-line w-6 text-center mr-3 text-lg group-hover:text-blue-900"></i>
-                <span class="nav-label whitespace-nowrap">Dashboard</span>
+                <span class="nav-label whitespace-nowrap">Overview</span>
             </a>
             <a href="tracking.php" class="flex items-center p-3 text-slate-600 hover:bg-slate-100 rounded-lg group">
                 <i class="fas fa-search w-6 text-center mr-3 text-lg group-hover:text-blue-900"></i>

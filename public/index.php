@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../helper/jwt_helper.php';
 require_once __DIR__ . '/../helper/generalValidationMessage.php';
 
-// Check for existing token
+// 1. If already logged in, skip the login page
 if (isset($_COOKIE['auth_token']) && !isset($_GET['error'])) {
     $decoded = JwtHelper::verifyToken($_COOKIE['auth_token']);
     if ($decoded && isset($decoded->data->role)) {
@@ -15,8 +15,9 @@ if (isset($_COOKIE['auth_token']) && !isset($_GET['error'])) {
     }
 }
 
-// Capture message
-$msg = function_exists('showValidation') ? showValidation() : "";
+// 2. Capture messages
+$url_error = isset($_GET['error']) ? htmlspecialchars($_GET['error']) : "";
+$session_msg = function_exists('showValidation') ? showValidation() : "";
 ?>
 
 <!doctype html>

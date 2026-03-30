@@ -1,24 +1,19 @@
 <?php
-require_once __DIR__ . '/../vendor/autoload.php';
+// config/config.php
 
-// Load .env
-$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/..');
-$dotenv->load();
+$host = "127.0.0.1";
+$username = "root";
+$password = ""; // ENSURE THIS IS EMPTY
+$database = "prcsystem_db";
 
-// Timezone
-date_default_timezone_set('Asia/Manila');
+// Use a try-catch block to handle connection errors gracefully
+try {
+    $conn = new mysqli($host, $username, $password, $database);
 
-// Get env values
-$host = $_ENV['DB_HOST'];
-$db   = $_ENV['DB_DATABASE'];
-$user = $_ENV['DB_USERNAME'];
-$pass = $_ENV['DB_PASSWORD'];
-
-// Connect
-$conn = new mysqli($host, $user, $pass, $db);
-
-// Check connection
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+    if ($conn->connect_error) {
+        die("Connection failed: " . $conn->connect_error);
+    }
+} catch (mysqli_sql_exception $e) {
+    die("Database Connection Error: " . $e->getMessage());
 }
 ?>
