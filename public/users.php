@@ -37,6 +37,8 @@ $deptOptions = fetchDept($conn);
                         <th class="p-4 text-xs font-semibold uppercase tracking-wider text-gray-500 text-center">
                             Email</th>
                         <th class="p-4 text-xs font-semibold uppercase tracking-wider text-gray-500 text-center">
+                            Department</th>
+                        <th class="p-4 text-xs font-semibold uppercase tracking-wider text-gray-500 text-center">
                             Role</th>
                         <th class="p-4 text-xs font-semibold uppercase tracking-wider text-gray-500 text-center w-32">
                             Actions</th>
@@ -103,6 +105,9 @@ $deptOptions = fetchDept($conn);
                                 </td>
                                 <td class="p-4 text-center text-sm text-gray-600">
                                     <?= htmlspecialchars($user['email']) ?>
+                                </td>
+                                <td class="p-4 text-center text-sm text-gray-600">
+                                    <?= htmlspecialchars($user['dept_name']) ?>
                                 </td>
                                 <td class="p-4 text-center"><span
                                         class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100"><?= htmlspecialchars($user['role_name']) ?></span>

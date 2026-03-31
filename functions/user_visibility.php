@@ -12,13 +12,22 @@ class UserVisibility
     public function getVisibleUsers(?int $limit = null, ?int $offset = null): array
     {
         // Inside your getVisibleUsers method, make sure the SELECT includes the email
-        $sql = "SELECT u.user_id, u.username, u.user_role_id, 
-               up.user_first_name, up.user_middle_name, up.user_last_name, 
-               up.email, up.user_prof, 
-               r.role_name
+        $sql = "SELECT 
+            u.user_id, 
+            u.username, 
+            u.user_role_id, 
+            up.user_first_name, 
+            up.user_middle_name, 
+            up.user_last_name, 
+            up.email, 
+            up.user_prof, 
+            up.dept_id,
+            d.dept_name,
+            r.role_name
         FROM user u
         INNER JOIN user_profile up ON u.user_id = up.user_id
         INNER JOIN user_role r ON u.user_role_id = r.user_role_id
+        INNER JOIN department d ON up.dept_id = d.dept_id
         WHERE u.user_status_id IN (1, 2, 3)";
 
         if ($limit !== null) {
