@@ -90,6 +90,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         "user_id" => $user["user_id"],
                         "username" => $user["username"],
                         "role" => $user["role_name"],
+                        "department" => $user["dept_name"],
                         "exp" => time() + 3600 // 1 hour expiry
                     ];
                     $jwt = JwtHelper::generateToken($payload);

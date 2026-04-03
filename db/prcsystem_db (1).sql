@@ -79,23 +79,17 @@ CREATE TABLE `document` (
   `current_user_id` char(36) NOT NULL,
   `current_dept_id` int NOT NULL,
   `doc_status_id` int NOT NULL DEFAULT '1',
-  `doc_type_id` int NOT NULL,
-  `ref_no` varchar(50) DEFAULT NULL,
   `uploaded_by` char(36) NOT NULL,
-  `applicant_name` varchar(255) DEFAULT NULL,
-  `file_path` varchar(255) DEFAULT NULL,
   `doc_created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `doc_updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`doc_id`),
   KEY `doc_fk_curr_user` (`current_user_id`),
   KEY `doc_fk_dept` (`current_dept_id`),
   KEY `doc_fk_status` (`doc_status_id`),
-  KEY `doc_fk_type` (`doc_type_id`),
   KEY `doc_fk_uploader` (`uploaded_by`),
   CONSTRAINT `doc_fk_curr_user` FOREIGN KEY (`current_user_id`) REFERENCES `user` (`user_id`),
   CONSTRAINT `doc_fk_dept` FOREIGN KEY (`current_dept_id`) REFERENCES `department` (`dept_id`),
   CONSTRAINT `doc_fk_status` FOREIGN KEY (`doc_status_id`) REFERENCES `doc_status` (`doc_status_id`),
-  CONSTRAINT `doc_fk_type` FOREIGN KEY (`doc_type_id`) REFERENCES `document_type` (`doc_type_id`),
   CONSTRAINT `doc_fk_uploader` FOREIGN KEY (`uploaded_by`) REFERENCES `user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -113,77 +107,19 @@ UNLOCK TABLES;
 -- Table structure for table `document_type`
 --
 
-DROP TABLE IF EXISTS `document_type`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `document_type` (
-  `doc_type_id` int NOT NULL AUTO_INCREMENT,
-  `document_type_name` varchar(50) NOT NULL,
-  `doc_created_at` datetime DEFAULT CURRENT_TIMESTAMP,
-  `doc_updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`doc_type_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `document_type`
---
-
-LOCK TABLES `document_type` WRITE;
-/*!40000 ALTER TABLE `document_type` DISABLE KEYS */;
-INSERT INTO `document_type` VALUES (1,'Board Resolution','2026-03-28 19:55:44','2026-03-28 19:55:44'),(2,'Licensure Exam Application','2026-03-28 19:55:44','2026-03-28 19:55:44'),(3,'Professional ID Renewal','2026-03-28 19:55:44','2026-03-28 19:55:44'),(4,'Formal Legal Complaint','2026-03-28 19:55:44','2026-03-28 19:55:44'),(5,'Memorandum Circular','2026-03-28 19:55:44','2026-03-28 19:55:44'),(6,'Certification of Good Standing','2026-03-28 19:55:44','2026-03-28 19:55:44'),(7,'Disbursement Voucher','2026-03-28 19:55:44','2026-03-28 19:55:44'),(8,'Office Order','2026-03-28 19:55:44','2026-03-28 19:55:44'),(9,'CPD Provider Accreditation','2026-03-28 19:55:44','2026-03-28 19:55:44'),(10,'Special Temporary Permit','2026-03-28 19:55:44','2026-03-28 19:55:44');
-/*!40000 ALTER TABLE `document_type` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `permissions`
 --
 
-DROP TABLE IF EXISTS `permissions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `permissions` (
-  `permission_id` int NOT NULL AUTO_INCREMENT,
-  `permission_name` varchar(45) NOT NULL,
-  PRIMARY KEY (`permission_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `permissions`
---
-
-LOCK TABLES `permissions` WRITE;
-/*!40000 ALTER TABLE `permissions` DISABLE KEYS */;
-/*!40000 ALTER TABLE `permissions` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `role_permissions`
 --
 
-DROP TABLE IF EXISTS `role_permissions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `role_permissions` (
-  `user_role_id` int NOT NULL,
-  `permission_id` int NOT NULL,
-  `is_active` tinyint(1) NOT NULL DEFAULT '1',
-  PRIMARY KEY (`user_role_id`,`permission_id`),
-  KEY `rp_fk_perm` (`permission_id`),
-  CONSTRAINT `rp_fk_perm` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`permission_id`) ON DELETE CASCADE,
-  CONSTRAINT `rp_fk_role` FOREIGN KEY (`user_role_id`) REFERENCES `user_role` (`user_role_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
---
--- Dumping data for table `role_permissions`
---
-
-LOCK TABLES `role_permissions` WRITE;
-/*!40000 ALTER TABLE `role_permissions` DISABLE KEYS */;
-/*!40000 ALTER TABLE `role_permissions` ENABLE KEYS */;
-UNLOCK TABLES;
 
 --
 -- Table structure for table `transaction_logs`
