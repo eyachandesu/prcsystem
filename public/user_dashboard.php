@@ -1,7 +1,6 @@
 <?php
-session_start();
-require_once __DIR__ . "/../config/config.php"; // Assuming init.php or config.php
-require_once __DIR__ . "/../helper/generalValidationMessage.php";
+require_once __DIR__ . "/../init.php";
+checkAuth('User'); // Ensure only Admins can access this page  
 
 // Placeholder for your auth check - Ensure this doesn't overwrite $user in the loop
 // $currentUser = checkAuth('Admin'); 

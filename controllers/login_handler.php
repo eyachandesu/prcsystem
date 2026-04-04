@@ -44,15 +44,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
          * Step 1: Find User & Join Data in one query
          * This is more efficient and ensures we have the Role and Name immediately.
          */
-        $sql = "SELECT 
-                    u.user_id, u.username, u.password, u.user_status_id,
-                    ur.role_name,
-                    CONCAT(up.user_first_name, ' ', up.user_last_name) AS user_full_name
-                FROM user u
-                LEFT JOIN user_profile up ON up.user_id = u.user_id
-                LEFT JOIN user_role ur ON ur.user_role_id = u.user_role_id
-                WHERE BINARY u.username = ? AND u.user_status_id < 4 
-                LIMIT 1";
+       
+$sql = "SELECT 
+            u.user_id, u.username, u.password, u.user_status_id,
+            ur.role_name, 
+            up.dept_id, 
+            d.dept_name, 
+            CONCAT(up.user_first_name, ' ', up.user_last_name) AS user_full_name
+        FROM user u
+        LEFT JOIN user_profile up ON up.user_id = u.user_id
+        LEFT JOIN user_role ur ON ur.user_role_id = u.user_role_id
+        LEFT JOIN department d ON d.dept_id = up.dept_id 
+        WHERE BINARY u.username = ? AND u.user_status_id < 4 
+        LIMIT 1";
 
         $stmt = $conn->prepare($sql);
         if (!$stmt) {
@@ -91,6 +95,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         "username" => $user["username"],
                         "role" => $user["role_name"],
                         "department" => $user["dept_name"],
+                        "dept_id" => $user["dept_id"],
                         "exp" => time() + 3600 // 1 hour expiry
                     ];
                     $jwt = JwtHelper::generateToken($payload);
@@ -110,6 +115,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 // Step 8: Store Session Data
                 $_SESSION['user_id']   = $user['user_id'];
                 $_SESSION['role']      = $user['role_name'];
+                $_SESSION['dept_id']   = $user['dept_id'];
                 $_SESSION['full_name'] = $user['user_full_name'] ?? $user['username'];
 
                 // Step 9: Logging (Insert Audit Trail)

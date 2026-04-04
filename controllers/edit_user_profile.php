@@ -1,8 +1,4 @@
 <?php
-/**
- * PRC Document Tracking System - Edit User Handler
- * Location: /controllers/edit_user_handler.php
- */
 
 require_once __DIR__ . "/../init.php";
 ob_start();

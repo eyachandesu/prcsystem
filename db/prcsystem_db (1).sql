@@ -79,6 +79,8 @@ CREATE TABLE `document` (
   `current_user_id` char(36) NOT NULL,
   `current_dept_id` int NOT NULL,
   `doc_status_id` int NOT NULL DEFAULT '1',
+  `doc_name` varchar(255) NOT NULL,
+  `doc_description` text,
   `uploaded_by` char(36) NOT NULL,
   `doc_created_at` datetime DEFAULT CURRENT_TIMESTAMP,
   `doc_updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
