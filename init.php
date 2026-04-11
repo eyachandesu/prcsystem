@@ -20,4 +20,6 @@ require_once __DIR__ . "/functions/fetch_user_role.php";
 require_once __DIR__ . "/functions/fetch_department.php";
 require_once __DIR__ . "/functions/role_functions.php";
 require_once __DIR__ . "/functions/document_visibility.php";
+require_once __DIR__ . "/functions/fetch_users_department.php";
+require_once __DIR__ . "/functions/get_users.php";
 ?>

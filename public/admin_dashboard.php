@@ -40,6 +40,10 @@ $user = checkAuth('Admin'); // Change 'Admin' to 'System Administrator' if that'
                 <i class="fas fa-chart-line w-6 text-center mr-3"></i>
                 <span>Overview</span>
             </a>
+            <a href="documents.php" class="flex items-center p-3 text-slate-500 hover:bg-slate-50 rounded-xl transition-all group">
+                <i class="fas fa-file w-6 text-center mr-3 group-hover:text-blue-900"></i>
+                <span>Documents</span>
+            </a>
             <a href="tracking.php" class="flex items-center p-3 text-slate-500 hover:bg-slate-50 rounded-xl transition-all group">
                 <i class="fas fa-search w-6 text-center mr-3 group-hover:text-blue-900"></i>
                 <span>Document Tracking</span>
