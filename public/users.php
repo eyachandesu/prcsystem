@@ -367,8 +367,87 @@ $deptOptions = fetchDept($conn);
             </div>
         </div>
     </div>
+    <!-- PROFILE MODAL -->
+<div id="profileModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+    
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeProfileModal()"></div>
+
+    <div class="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-100 relative z-10 overflow-hidden">
+
+        <div class="px-8 py-5 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+            <span class="text-xs font-black uppercase tracking-widest text-slate-700">
+                User Profile
+            </span>
+
+            <button onclick="closeProfileModal()" class="text-slate-400 hover:text-red-500">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <div class="p-8">
+
+            <div class="flex flex-col items-center text-center mb-8">
+
+                <img id="profileImage"
+                     src=""
+                     class="h-28 w-28 rounded-full object-cover border-4 border-blue-100 shadow-md mb-4">
+
+                <h2 id="profileName" class="text-xl font-black text-slate-800"></h2>
+
+                <p id="profileRole" class="text-xs uppercase font-bold text-blue-600 tracking-widest mt-1"></p>
+
+            </div>
+
+            <div class="space-y-4">
+
+                <div class="bg-slate-50 rounded-2xl p-4">
+                    <p class="text-[10px] uppercase font-black text-slate-400">Email</p>
+                    <p id="profileEmail" class="font-bold text-slate-700 mt-1"></p>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-4">
+                    <p class="text-[10px] uppercase font-black text-slate-400">Department</p>
+                    <p id="profileDept" class="font-bold text-slate-700 mt-1"></p>
+                </div>
+
+                <div class="bg-slate-50 rounded-2xl p-4">
+                    <p class="text-[10px] uppercase font-black text-slate-400">Role</p>
+                    <p id="profileRole2" class="font-bold text-slate-700 mt-1"></p>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
 
     <!-- Scripts -->
+     <script>
+const profileModal = document.getElementById('profileModal');
+
+function openProfileModal(id, name, email, dept, role, image) {
+
+    document.getElementById('profileName').textContent = name;
+    document.getElementById('profileEmail').textContent = email;
+    document.getElementById('profileDept').textContent = dept;
+    document.getElementById('profileRole').textContent = role;
+    document.getElementById('profileRole2').textContent = role;
+    document.getElementById('profileImage').src = image;
+
+    profileModal.classList.remove('hidden');
+}
+
+function closeProfileModal() {
+    profileModal.classList.add('hidden');
+}
+
+document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+        closeProfileModal();
+    }
+});
+</script>
     <script>
         // ADD USER MODAL
         const addModal = document.getElementById('addUserModal');
@@ -406,5 +485,6 @@ $deptOptions = fetchDept($conn);
     
     <!-- Your custom user list script -->
     <script src="js/user_list.js"></script>
+    
 </body>
 </html>
