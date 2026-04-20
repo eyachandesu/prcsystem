@@ -48,15 +48,16 @@ $user = checkAuth('Admin'); // Change 'Admin' to 'System Administrator' if that'
                 <i class="fas fa-search w-6 text-center mr-3 group-hover:text-blue-900"></i>
                 <span>Document Tracking</span>
             </a>
-            <a href="transfer.php" class="flex items-center p-3 text-slate-500 hover:bg-slate-50 rounded-xl transition-all group">
-                <i class="fas fa-exchange-alt w-6 text-center mr-3 group-hover:text-blue-900"></i>
-                <span>Transfer Document</span>
-            </a>
             <a href="receive.php" class="flex items-center p-3 text-slate-500 hover:bg-slate-50 rounded-xl transition-all group">
                 <i class="fas fa-file-import w-6 text-center mr-3 group-hover:text-blue-900"></i>
                 <span>Receive Document</span>
             </a>
+            <a href="users.php" class="flex items-center p-3 text-slate-500 hover:bg-slate-50 rounded-xl transition-all group">
+                <i class="fas fa-users-cog w-6 text-center mr-3"></i>
+                <span>User Management</span>
+        </a>    
         </nav>
+        
 
         <div class="p-6 border-t border-slate-50">
             <a href="../controllers/logout_handler.php" class="flex items-center p-3 text-red-500 hover:bg-red-50 rounded-xl font-bold transition-all">
