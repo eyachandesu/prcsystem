@@ -220,3 +220,4 @@ $paginationBase = $baseUrl . ($baseQuery ? '?' . $baseQuery : '') . $separator;
 
 </body>
 </html>
+
